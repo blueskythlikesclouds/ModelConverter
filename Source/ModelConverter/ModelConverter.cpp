@@ -206,8 +206,7 @@ void ModelConverter::convertNodesRecursively(const aiNode* aiNode, size_t parent
         auto& node = model.nodes.emplace_back();
         node.parentIndex = static_cast<uint32_t>(parentIndex);
         node.name = aiNode->mName.C_Str();
-
-        memcpy(&node.matrix, &aiMatrix4x4(matrix).Inverse().Transpose(), sizeof(matrix));
+        memcpy(&node.matrix, &aiMatrix4x4(matrix).Inverse(), sizeof(matrix));
 
         nodes.emplace(aiNode->mName.C_Str(), nodeIndex);
         parentIndex = nodeIndex;
