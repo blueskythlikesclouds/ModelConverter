@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Pch.cpp" />
+    <ClCompile Include="SampleChunk.cpp" />
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="Parameter.cpp" />
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="VertexElement.cpp" />
+    <ClCompile Include="TextureUnit.cpp" />
+    <ClCompile Include="MeshGroup.cpp" />
+    <ClCompile Include="Model.cpp" />
+    <ClCompile Include="Node.cpp" />
+    <ClCompile Include="..\..\Dependencies\meshoptimizer\src\allocator.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\meshoptimizer\src\clusterizer.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\meshoptimizer\src\indexcodec.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\meshoptimizer\src\indexgenerator.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\meshoptimizer\src\overdrawanalyzer.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\meshoptimizer\src\overdrawoptimizer.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\meshoptimizer\src\simplifier.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\meshoptimizer\src\spatialorder.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\meshoptimizer\src\stripifier.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\meshoptimizer\src\vcacheanalyzer.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\meshoptimizer\src\vcacheoptimizer.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\meshoptimizer\src\vertexcodec.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\meshoptimizer\src\vertexfilter.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\meshoptimizer\src\vfetchanalyzer.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Dependencies\meshoptimizer\src\vfetchoptimizer.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelConverter.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Pch.h" />
+    <ClInclude Include="SampleChunk.h" />
+    <ClInclude Include="EndianSwap.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="Parameter.h" />
+    <ClInclude Include="Texture.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="VertexElement.h" />
+    <ClInclude Include="TextureUnit.h" />
+    <ClInclude Include="MeshGroup.h" />
+    <ClInclude Include="Model.h" />
+    <ClInclude Include="Node.h" />
+    <ClInclude Include="ModelConverter.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Dependencies">
+      <UniqueIdentifier>{0e1563d7-ce53-4189-adbc-8508216e1458}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
