@@ -8,14 +8,16 @@
 
 ModelConverter::ModelConverter(const char* path)
 {
+    importer.SetPropertyInteger(AI_CONFIG_PP_SBBC_MAX_BONES, 24);
     importer.SetPropertyInteger(AI_CONFIG_PP_SLM_VERTEX_LIMIT, 32767);
-    importer.SetPropertyInteger(AI_CONFIG_PP_SBBC_MAX_BONES, 25);
+    importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
 
     aiScene = importer.ReadFile(path,
         aiProcess_CalcTangentSpace |
         aiProcess_JoinIdenticalVertices |
         aiProcess_Triangulate |
         aiProcess_SplitLargeMeshes |
+        aiProcess_LimitBoneWeights |
         aiProcess_SortByPType |
         aiProcess_SplitByBoneCount | 
         aiProcess_FlipUVs);
@@ -182,19 +184,6 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
                     blendIndex.u[index] = static_cast<uint32_t>(meshNodeIndex);
                     auto& blendWeight = blendWeights[aiWeight.mVertexId];
                     blendWeight.f[index] = aiWeight.mWeight;
-                }
-            }
-
-            for (auto& blendWeight : blendWeights)
-            {
-                float factor = blendWeight.fx + blendWeight.fy + blendWeight.fz + blendWeight.fw;
-                if (factor > 0.0f)
-                {
-                    factor = 1.0f / factor;
-                    blendWeight.fx *= factor;
-                    blendWeight.fy *= factor;
-                    blendWeight.fz *= factor;
-                    blendWeight.fw *= factor;
                 }
             }
         }
