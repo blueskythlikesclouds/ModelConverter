@@ -9,12 +9,9 @@ bool Tag::getBoolValue(size_t index, bool defaultValue) const
 {
     if (values.size() > index && !values[index].empty())
     {
-        return
-            values[index][0] == '1' ||
-            values[index][0] == 't' ||
-            values[index][0] == 'T' ||
-            values[index][0] == 'y' ||
-            values[index][0] == 'Y';
+        return values[index][0] == '1' ||
+            values[index][0] == 't' || values[index][0] == 'T' ||
+            values[index][0] == 'y' || values[index][0] == 'Y';
     }
 
     return defaultValue;
@@ -23,7 +20,23 @@ bool Tag::getBoolValue(size_t index, bool defaultValue) const
 int Tag::getIntValue(size_t index, int defaultValue) const
 {
     if (values.size() > index)
-        std::from_chars(values[index].data(), values[index].data() + values[index].size(), defaultValue);
+    {
+        const auto[ptr, err] = std::from_chars(values[index].data(), values[index].data() + values[index].size(), defaultValue);
+
+        if (err != std::errc())
+        {
+            if (values[index][0] == 't' || values[index][0] == 'T' ||
+                values[index][0] == 'y' || values[index][0] == 'Y')
+            {
+                return 1;
+            }
+            if (values[index][0] == 'f' || values[index][0] == 'F' ||
+                values[index][0] == 'n' || values[index][0] == 'N')
+            {
+                return 0;
+            }
+        }
+    }
 
     return defaultValue;
 }

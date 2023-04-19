@@ -8,9 +8,7 @@ struct Parameter
     std::string name;
     std::vector<T> values;
 
-    Parameter()
-    {
-    }
+    Parameter() = default;
 
     Parameter(std::string name, std::initializer_list<T> values)
         : name(std::move(name)), values(values)
