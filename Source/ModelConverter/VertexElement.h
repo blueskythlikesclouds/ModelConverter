@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-struct SampleChunk;
+struct SampleChunkWriter;
 
 enum class VertexFormat : uint32_t
 {
@@ -72,6 +72,6 @@ struct VertexElement
     size_t getSize() const;
     size_t getNextOffset() const;
 
-    void write(SampleChunk& out) const;
-    void write(SampleChunk& out, const Vector4& value) const;
+    void write(SampleChunkWriter& writer) const;
+    void write(SampleChunkWriter& writer, const Vector4& value) const;
 };

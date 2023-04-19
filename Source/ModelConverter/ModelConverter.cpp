@@ -346,6 +346,17 @@ void ModelConverter::convertMaterial(const aiMaterial* aiMaterial)
             value = tag.getFloatValue(i, value);
         }
     }
+
+    range = tags.indices.equal_range("PROP");
+
+    for (auto it = range.first; it != range.second; ++it)
+    {
+        const Tag& tag = tags[it->second];
+        const auto name = tag.getValue(0, std::string_view());
+
+        if (!name.empty())
+            material.scaParameters.emplace(name, tag.getIntValue(1, NULL));
+    }
 }
 
 void ModelConverter::convertMaterials()
@@ -418,6 +429,16 @@ void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatr
 
         const Tags tags(aiNode->mName.C_Str());
         group.name = tags.getValue("NAME", 0, tags.name);
+
+        auto range = tags.indices.equal_range("PROP");
+        for (auto it = range.first; it != range.second; ++it)
+        {
+            const Tag& tag = tags[it->second];
+            const auto name = tag.getValue(0, std::string_view());
+
+            if (!name.empty())
+                model.scaParameters.emplace(name, tag.getIntValue(1, NULL));
+        }
     }
 
     for (size_t i = 0; i < aiNode->mNumChildren; i++)
@@ -429,7 +450,7 @@ void ModelConverter::convertMeshes()
     convertMeshesRecursively(aiScene->mRootNode, aiMatrix4x4());
 }
 
-void ModelConverter::convert(const Config& config)
+void ModelConverter::convert(Config config)
 {
     convertMaterials();
     convertNodes();

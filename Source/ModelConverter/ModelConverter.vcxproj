@@ -251,6 +251,7 @@
     <ClCompile Include="ModelConverter.cpp" />
     <ClCompile Include="ModelOptimizer.cpp" />
     <ClCompile Include="Node.cpp" />
+    <ClCompile Include="OffsetWrite.cpp" />
     <ClCompile Include="Parameter.cpp" />
     <ClCompile Include="Pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -258,7 +259,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SampleChunk.cpp" />
+    <ClCompile Include="SampleChunkWriter.cpp" />
+    <ClCompile Include="SampleChunkNode.cpp" />
     <ClCompile Include="Tag.cpp" />
     <ClCompile Include="TangentGenerator.cpp" />
     <ClCompile Include="Texture.cpp" />
@@ -275,9 +277,11 @@
     <ClInclude Include="ModelConverter.h" />
     <ClInclude Include="ModelOptimizer.h" />
     <ClInclude Include="Node.h" />
+    <ClInclude Include="OffsetWrite.h" />
     <ClInclude Include="Parameter.h" />
     <ClInclude Include="Pch.h" />
-    <ClInclude Include="SampleChunk.h" />
+    <ClInclude Include="SampleChunkWriter.h" />
+    <ClInclude Include="SampleChunkNode.h" />
     <ClInclude Include="Tag.h" />
     <ClInclude Include="TangentGenerator.h" />
     <ClInclude Include="Texture.h" />

@@ -2,20 +2,18 @@
 
 #include "EndianSwap.h"
 
-struct SampleChunk
+struct SampleChunkNode;
+struct OffsetWrite;
+
+struct SampleChunkWriter
 {
-    struct OffsetWrite;
-
     std::vector<uint8_t> data;
-    size_t position;
+    size_t currentOffset;
     std::list<OffsetWrite> offsetWrites;
+    std::vector<std::pair<size_t, size_t>> offsets;
 
-    size_t beginOffset;
-    uint32_t dataVersion;
-    size_t dataOffset;
-
-    SampleChunk();
-    ~SampleChunk();
+    SampleChunkWriter();
+    ~SampleChunkWriter();
 
     void write(const void* value, size_t size);
 
@@ -40,8 +38,10 @@ struct SampleChunk
     void align(size_t alignment);
     void writeNulls(size_t count);
 
-    void begin(uint32_t version);
-    void end();
+    void flush();
+
+    static SampleChunkWriter write(uint32_t dataVersion, std::function<void(SampleChunkWriter&)> function);
+    static SampleChunkWriter write(const SampleChunkNode& node);
 
     void save(const char* path) const;
 };

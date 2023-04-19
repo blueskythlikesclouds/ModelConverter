@@ -1,12 +1,12 @@
 ﻿#include "Node.h"
 
-#include "SampleChunk.h"
+#include "SampleChunkWriter.h"
 
-void Node::write(SampleChunk& out) const
+void Node::write(SampleChunkWriter& writer) const
 {
-    out.write<uint32_t>(parentIndex);
-    out.writeOffset(1, [&]
+    writer.write<uint32_t>(parentIndex);
+    writer.writeOffset(1, [&]
     {
-        out.write(name);
+        writer.write(name);
     });
 }

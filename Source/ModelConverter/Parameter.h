@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-struct SampleChunk;
+struct SampleChunkWriter;
 
 template<typename T>
 struct Parameter
@@ -17,5 +17,5 @@ struct Parameter
     {
     }
 
-    void write(SampleChunk& out) const;
+    void write(SampleChunkWriter& writer) const;
 };

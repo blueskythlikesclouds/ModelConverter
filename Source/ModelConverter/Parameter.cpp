@@ -1,19 +1,19 @@
 ﻿#include "Parameter.h"
 
-#include "SampleChunk.h"
+#include "SampleChunkWriter.h"
 
 template <typename T>
-void Parameter<T>::write(SampleChunk& out) const
+void Parameter<T>::write(SampleChunkWriter& writer) const
 {
-    out.write(static_cast<uint32_t>(values.size() << 8));
-    out.writeOffset(1, [&]
+    writer.write(static_cast<uint32_t>(values.size() << 8));
+    writer.writeOffset(1, [&]
     {
-        out.write(name); 
+        writer.write(name); 
     });
-    out.writeOffset(4, [&]
+    writer.writeOffset(4, [&]
     {
         for (const auto& value : values)
-            out.write(value);
+            writer.write(value);
     });
 }
 

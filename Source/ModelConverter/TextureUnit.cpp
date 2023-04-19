@@ -1,12 +1,12 @@
 ﻿#include "TextureUnit.h"
 
-#include "SampleChunk.h"
+#include "SampleChunkWriter.h"
 
-void TextureUnit::write(SampleChunk& out) const
+void TextureUnit::write(SampleChunkWriter& writer) const
 {
-    out.writeOffset(1, [&]
+    writer.writeOffset(1, [&]
     {
-        out.write(name);
+        writer.write(name);
     });
-    out.write<uint8_t>(index);
+    writer.write<uint8_t>(index);
 }

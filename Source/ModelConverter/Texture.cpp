@@ -1,6 +1,6 @@
 ﻿#include "Texture.h"
 
-#include "SampleChunk.h"
+#include "SampleChunkWriter.h"
 
 Texture::Texture()
     : texCoordIndex()
@@ -9,18 +9,18 @@ Texture::Texture()
 {
 }
 
-void Texture::write(SampleChunk& out) const
+void Texture::write(SampleChunkWriter& writer) const
 {
-    out.writeOffset(1, [&]
+    writer.writeOffset(1, [&]
     {
-        out.write(pictureName);
+        writer.write(pictureName);
     });
-    out.write<uint8_t>(texCoordIndex);
-    out.write(static_cast<uint8_t>(addressU));
-    out.write(static_cast<uint8_t>(addressV));
-    out.write<uint8_t>(0);
-    out.writeOffset(1, [&]
+    writer.write<uint8_t>(texCoordIndex);
+    writer.write(static_cast<uint8_t>(addressU));
+    writer.write(static_cast<uint8_t>(addressV));
+    writer.write<uint8_t>(0);
+    writer.writeOffset(1, [&]
     {
-        out.write(type);
+        writer.write(type);
     });
 }

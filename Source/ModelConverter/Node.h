@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-struct SampleChunk;
+struct SampleChunkWriter;
 
 struct Node
 {
@@ -8,5 +8,5 @@ struct Node
     std::string name;
     Float4x4 matrix;
 
-    void write(SampleChunk& out) const;
+    void write(SampleChunkWriter& writer) const;
 };

@@ -3,7 +3,7 @@
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Pch.cpp" />
-    <ClCompile Include="SampleChunk.cpp" />
+    <ClCompile Include="SampleChunkWriter.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Parameter.cpp" />
     <ClCompile Include="Texture.cpp" />
@@ -59,14 +59,18 @@
       <Filter>Dependencies</Filter>
     </ClCompile>
     <ClCompile Include="ModelConverter.cpp" />
-    <ClCompile Include="..\..\Dependencies\MikkTSpace\mikktspace.c" />
     <ClCompile Include="ModelOptimizer.cpp" />
     <ClCompile Include="TangentGenerator.cpp" />
     <ClCompile Include="Tag.cpp" />
+    <ClCompile Include="..\..\Dependencies\MikkTSpace\mikktspace.c">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="OffsetWrite.cpp" />
+    <ClCompile Include="SampleChunkNode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Pch.h" />
-    <ClInclude Include="SampleChunk.h" />
+    <ClInclude Include="SampleChunkWriter.h" />
     <ClInclude Include="EndianSwap.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Parameter.h" />
@@ -78,10 +82,12 @@
     <ClInclude Include="Model.h" />
     <ClInclude Include="Node.h" />
     <ClInclude Include="ModelConverter.h" />
-    <ClInclude Include="Config.h" />
     <ClInclude Include="ModelOptimizer.h" />
     <ClInclude Include="TangentGenerator.h" />
     <ClInclude Include="Tag.h" />
+    <ClInclude Include="Config.h" />
+    <ClInclude Include="OffsetWrite.h" />
+    <ClInclude Include="SampleChunkNode.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Dependencies">

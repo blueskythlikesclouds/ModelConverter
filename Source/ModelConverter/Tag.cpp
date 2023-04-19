@@ -20,6 +20,14 @@ bool Tag::getBoolValue(size_t index, bool defaultValue) const
     return defaultValue;
 }
 
+int Tag::getIntValue(size_t index, int defaultValue) const
+{
+    if (values.size() > index)
+        std::from_chars(values[index].data(), values[index].data() + values[index].size(), defaultValue);
+
+    return defaultValue;
+}
+
 float Tag::getFloatValue(size_t index, float defaultValue) const
 {
     if (values.size() > index)
@@ -104,6 +112,12 @@ bool Tags::getBoolValue(const std::string_view& tag, size_t index, bool defaultV
 {
     const auto pair = indices.find(tag);
     return pair != indices.end() ? operator[](pair->second).getBoolValue(index, defaultValue) : defaultValue;
+}
+
+int Tags::getIntValue(const std::string_view& tag, size_t index, int defaultValue) const
+{
+    const auto pair = indices.find(tag);
+    return pair != indices.end() ? operator[](pair->second).getIntValue(index, defaultValue) : defaultValue;
 }
 
 float Tags::getFloatValue(const std::string_view& tag, size_t index, float defaultValue) const

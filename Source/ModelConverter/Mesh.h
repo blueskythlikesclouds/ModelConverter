@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-struct SampleChunk;
+struct SampleChunkWriter;
 struct TextureUnit;
 struct VertexElement;
 
@@ -16,5 +16,5 @@ struct Mesh
     Mesh();
     ~Mesh();
 
-    void write(SampleChunk& out) const;
+    void write(SampleChunkWriter& writer, uint32_t dataVersion) const;
 };

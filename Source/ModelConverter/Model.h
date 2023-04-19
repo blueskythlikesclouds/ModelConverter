@@ -1,6 +1,8 @@
 ﻿#pragma once
 
-struct SampleChunk;
+enum Config;
+
+struct SampleChunkWriter;
 struct Node;
 struct MeshGroup;
 
@@ -10,10 +12,11 @@ struct Model
     std::vector<Node> nodes;
     Float3 min;
     Float3 max;
+    std::unordered_map<std::string, int> scaParameters;
 
     Model();
     ~Model();
 
-    void write(SampleChunk& out) const;
-    void save(const char* path) const;
+    void write(SampleChunkWriter& writer, uint32_t dataVersion) const;
+    void save(const char* path, Config config) const;
 };

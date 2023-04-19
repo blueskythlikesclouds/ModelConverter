@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-struct SampleChunk;
+struct SampleChunkWriter;
 
 enum class AddressMode
 {
@@ -22,5 +22,5 @@ struct Texture
 
     Texture();
 
-    void write(SampleChunk& out) const;
+    void write(SampleChunkWriter& writer) const;
 };

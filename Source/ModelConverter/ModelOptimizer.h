@@ -1,9 +1,9 @@
 ﻿#pragma once
 
-struct Config;
+enum Config;
 struct Model;
 
 struct ModelOptimizer
 {
-    static void optimize(Model& model, const Config& config);
+    static void optimize(Model& model, Config config);
 };

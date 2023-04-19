@@ -1,18 +1,18 @@
 ﻿#include "MeshGroup.h"
 
 #include "Mesh.h"
-#include "SampleChunk.h"
+#include "SampleChunkWriter.h"
 
-static void writeMeshes(SampleChunk& out, const std::vector<Mesh>& meshes)
+static void writeMeshes(SampleChunkWriter& writer, uint32_t dataVersion, const std::vector<Mesh>& meshes)
 {
-    out.write(static_cast<uint32_t>(meshes.size()));
-    out.writeOffset(4, [&]
+    writer.write(static_cast<uint32_t>(meshes.size()));
+    writer.writeOffset(4, [&]
     {
        for (const auto& mesh : meshes)
        {
-           out.writeOffset(4, [&]
+           writer.writeOffset(4, [&]
            {
-               mesh.write(out);
+               mesh.write(writer, dataVersion);
            });
        }
     });
@@ -21,46 +21,46 @@ static void writeMeshes(SampleChunk& out, const std::vector<Mesh>& meshes)
 MeshGroup::MeshGroup() = default;
 MeshGroup::~MeshGroup() = default;
 
-void MeshGroup::write(SampleChunk& out) const
+void MeshGroup::write(SampleChunkWriter& writer, uint32_t dataVersion) const
 {
-    writeMeshes(out, opaqueMeshes);
-    writeMeshes(out, transparentMeshes);
-    writeMeshes(out, punchThroughMeshes);
+    writeMeshes(writer, dataVersion, opaqueMeshes);
+    writeMeshes(writer, dataVersion, transparentMeshes);
+    writeMeshes(writer, dataVersion, punchThroughMeshes);
 
-    out.write(static_cast<uint32_t>(specialMeshGroups.size()));
+    writer.write(static_cast<uint32_t>(specialMeshGroups.size()));
     if (!specialMeshGroups.empty())
     {
-        out.writeOffset(4, [&]
+        writer.writeOffset(4, [&]
         {
             for (const auto& type : specialMeshGroups | std::views::keys)
             {
-                out.writeOffset(1, [&]
+                writer.writeOffset(1, [&]
                 {
-                    out.write(type);
+                    writer.write(type);
                 });
             }
         });
-        out.writeOffset(4, [&]
+        writer.writeOffset(4, [&]
         {
            for (auto& group : specialMeshGroups | std::views::values)
            {
-               out.writeOffset(4, [&]
+               writer.writeOffset(4, [&]
                {
-                   out.write(static_cast<uint32_t>(group.size()));
+                   writer.write(static_cast<uint32_t>(group.size()));
                });
            }
         });
-        out.writeOffset(4, [&]
+        writer.writeOffset(4, [&, dataVersion]
         {
             for (auto& group : specialMeshGroups | std::views::values)
             {
-                out.writeOffset(4, [&]
+                writer.writeOffset(4, [&, dataVersion]
                 {
                     for (auto& mesh : group)
                     {
-                        out.writeOffset(4, [&]
+                        writer.writeOffset(4, [&, dataVersion]
                         {
-                            mesh.write(out);
+                            mesh.write(writer, dataVersion);
                         });
                     }
                 });
@@ -69,11 +69,11 @@ void MeshGroup::write(SampleChunk& out) const
     }
     else
     {
-        out.write<uint32_t>(~0);
-        out.write<uint32_t>(~0);
-        out.write<uint32_t>(~0);
+        writer.write<uint32_t>(~0);
+        writer.write<uint32_t>(~0);
+        writer.write<uint32_t>(~0);
     }
 
-    out.write(name);
-    out.align(4);
+    writer.write(name);
+    writer.align(4);
 }

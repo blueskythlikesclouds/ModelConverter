@@ -2,8 +2,9 @@
 
 #include "Model.h"
 
+enum Config;
+
 struct Material;
-struct Config;
 struct Mesh;
 
 struct ModelConverter
@@ -29,5 +30,5 @@ struct ModelConverter
     void convertMeshesRecursively(const aiNode* aiNode, const aiMatrix4x4& parentMatrix);
     void convertMeshes();
 
-    void convert(const Config& config);
+    void convert(Config config);
 };

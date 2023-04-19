@@ -1,8 +1,10 @@
 ﻿#include "Model.h"
 
+#include "Config.h"
 #include "MeshGroup.h"
 #include "Node.h"
-#include "SampleChunk.h"
+#include "SampleChunkNode.h"
+#include "SampleChunkWriter.h"
 
 Model::Model()
     : min({+INFINITY, +INFINITY, +INFINITY})
@@ -12,58 +14,91 @@ Model::Model()
 }
 Model::~Model() = default;
 
-void Model::write(SampleChunk& out) const
+void Model::write(SampleChunkWriter& writer, uint32_t dataVersion) const
 {
-    out.write(static_cast<uint32_t>(meshGroups.size()));
-    out.writeOffset(4, [&]
+    writer.write(static_cast<uint32_t>(meshGroups.size()));
+    writer.writeOffset(4, [&, dataVersion]
     {
         for (const auto& meshGroup : meshGroups)
         {
-            out.writeOffset(4, [&]
+            writer.writeOffset(4, [&, dataVersion]
             {
-                meshGroup.write(out);
+                meshGroup.write(writer, dataVersion);
             });
         }
     });
 
-    out.write<uint32_t>(0);
-    out.writeOffset(4, [&]
+    writer.write<uint32_t>(0);
+    writer.writeOffset(4, [&]
     {
     });
 
-    out.write<uint32_t>(static_cast<uint32_t>(nodes.size()));
-    out.writeOffset(4, [&]
+    writer.write(static_cast<uint32_t>(nodes.size()));
+    writer.writeOffset(4, [&]
     {
         for (const auto& node : nodes)
         {
-            out.writeOffset(4, [&]
+            writer.writeOffset(4, [&]
             {
-                node.write(out);
+                node.write(writer);
             });
         }
     });
-    out.writeOffset(4, [&]
+    writer.writeOffset(4, [&]
     {
         for (const auto& node : nodes)
-            out.write(node.matrix);
+            writer.write(node.matrix);
     });
 
-    out.writeOffset(4, [&]
+    writer.writeOffset(4, [&]
     {
-        out.write(min[0]);
-        out.write(max[0]);
-        out.write(min[1]);
-        out.write(max[1]);
-        out.write(min[2]);
-        out.write(max[2]);
+        writer.write(min[0]);
+        writer.write(max[0]);
+        writer.write(min[1]);
+        writer.write(max[1]);
+        writer.write(min[2]);
+        writer.write(max[2]);
     });
 }
 
-void Model::save(const char* path) const
+void Model::save(const char* path, Config config) const
 {
-    SampleChunk out;
-    out.begin(nodes.size() > 256 ? 6 : 5);
-    write(out);
-    out.end();
-    out.save(path);
+    const uint32_t dataVersion = nodes.size() > 256 ? 6 : 5;
+
+    if (config & CONFIG_FLAG_V2_SAMPLE_CHUNK)
+    {
+        SampleChunkNode model("Model", 1);
+
+        if (!scaParameters.empty())
+        {
+            auto& nodesExt = model.children.emplace_back("NodesExt", 1);
+            const size_t count = !nodes.empty() ? nodes.size() : 1;
+
+            for (size_t i = 0; i < count; i++)
+            {
+                auto& nodePrms = nodesExt.children.emplace_back("NodePrms", static_cast<int>(i));
+                auto& scaParam = nodePrms.children.emplace_back("SCAParam", 1);
+
+                for (const auto& [name, value] : scaParameters)
+                    scaParam.children.emplace_back(name, value);
+            }
+        }
+
+        if (config & CONFIG_FLAG_TRIANGLELIST_PRIMITIVE_TOPOLOGY)
+            model.children.emplace_back("Topology", 3);
+
+        model.children.emplace_back("Contexts", 5, [&, dataVersion](SampleChunkWriter& writer)
+        {
+            write(writer, dataVersion);
+        });
+
+        SampleChunkWriter::write(model).save(path);
+    }
+    else
+    {
+        SampleChunkWriter::write(dataVersion, [&, dataVersion](SampleChunkWriter& writer)
+        {
+            write(writer, dataVersion);
+        }).save(path);
+    }
 }

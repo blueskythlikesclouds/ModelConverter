@@ -1,8 +1,12 @@
 ﻿#pragma once
 
-struct SampleChunk;
+enum Config;
+
+struct SampleChunkWriter;
+
 template<typename T>
 struct Parameter;
+
 struct Texture;
 
 struct Material
@@ -17,10 +21,11 @@ struct Material
     std::vector<Parameter<Float4>> float4Parameters;
     std::vector<Parameter<Int4>> int4Parameters;
     std::vector<Parameter<BOOL>> boolParameters;
+    std::unordered_map<std::string, int> scaParameters;
 
     Material();
     ~Material();
 
-    void write(SampleChunk& out) const;
-    void save(const char* path) const;
+    void write(SampleChunkWriter& writer) const;
+    void save(const char* path, Config config) const;
 };
