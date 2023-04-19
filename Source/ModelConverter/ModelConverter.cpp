@@ -199,6 +199,11 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
     for (size_t i = 0; i < mesh.faceIndices.size(); i++)
         mesh.faceIndices[i] = static_cast<uint16_t>(i);
 
+    auto& material = materials[aiMesh->mMaterialIndex];
+
+    for (const auto& texture : material.textures)
+        mesh.textureUnits.emplace_back(texture.type, static_cast<uint8_t>(mesh.textureUnits.size()));
+
     return mesh;
 }
 
@@ -337,7 +342,7 @@ void ModelConverter::convertMaterial(const aiMaterial* aiMaterial)
 
         for (size_t i = 1; i < tag.values.size(); i++)
         {
-            auto& value = material.float4Parameters[index].values[0][i];
+            auto& value = material.float4Parameters[index].values[0][i - 1];
             value = tag.getFloatValue(i, value);
         }
     }
@@ -398,7 +403,8 @@ void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatr
             }
         }
 
-        group.name = aiNode->mName.C_Str();
+        const Tags tags(aiNode->mName.C_Str());
+        group.name = tags.getValue("NAME", 0, tags.name);
     }
 
     for (size_t i = 0; i < aiNode->mNumChildren; i++)

@@ -4,7 +4,7 @@
 
 void TextureUnit::write(SampleChunk& out) const
 {
-    out.writeOffset(4, [&]
+    out.writeOffset(1, [&]
     {
         out.write(name);
     });
