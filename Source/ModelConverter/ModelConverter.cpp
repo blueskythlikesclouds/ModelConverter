@@ -2,7 +2,9 @@
 
 #include "Mesh.h"
 #include "MeshGroup.h"
+#include "ModelOptimizer.h"
 #include "Node.h"
+#include "TangentGenerator.h"
 #include "TextureUnit.h"
 #include "VertexElement.h"
 
@@ -13,7 +15,6 @@ ModelConverter::ModelConverter(const char* path)
     importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
 
     aiScene = importer.ReadFile(path,
-        aiProcess_CalcTangentSpace |
         aiProcess_JoinIdenticalVertices |
         aiProcess_Triangulate |
         aiProcess_SplitLargeMeshes |
@@ -31,6 +32,7 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
 
     Mesh mesh;
     mesh.materialName = aiScene->mMaterials[aiMesh->mMaterialIndex]->GetName().C_Str();
+    mesh.faceIndices.reserve(aiMesh->mNumFaces * 3);
 
     for (size_t i = 0; i < aiMesh->mNumFaces; i++)
     {
@@ -44,19 +46,12 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
         }
     }
 
-    if (!mesh.faceIndices.empty())
-    {
-        std::vector<uint16_t> indices;
-        indices.resize(meshopt_stripifyBound(mesh.faceIndices.size()));
-        indices.resize(meshopt_stripify(indices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), aiMesh->mNumVertices, static_cast<uint16_t>(~0)));
-        std::swap(indices, mesh.faceIndices);
-    }
-
     auto& positions = mesh.vertexStreams[static_cast<size_t>(VertexType::Position)].emplace_back();
+    positions.reserve(mesh.faceIndices.size());
 
-    for (size_t i = 0; i < aiMesh->mNumVertices; i++)
+    for (const auto index : mesh.faceIndices)
     {
-        const aiVector3D position = matrix * aiMesh->mVertices[i];
+        const aiVector3D position = matrix * aiMesh->mVertices[index];
         positions.emplace_back(position[0], position[1], position[2]);
 
         for (uint32_t j = 0; j < 3; j++)
@@ -71,35 +66,23 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
     if (aiMesh->HasNormals())
     {
         auto& normals = mesh.vertexStreams[static_cast<size_t>(VertexType::Normal)].emplace_back();
+        normals.reserve(mesh.faceIndices.size());
 
-        for (size_t i = 0; i < aiMesh->mNumVertices; i++)
+        for (const auto index : mesh.faceIndices)
         {
-            const aiVector3D normal = ori.Rotate(aiMesh->mNormals[i]).NormalizeSafe();
+            const aiVector3D normal = ori.Rotate(aiMesh->mNormals[index]).NormalizeSafe();
             normals.emplace_back(normal[0], normal[1], normal[2]);
         }
 
         mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), VertexFormat::FLOAT3, VertexType::Normal, 0);
-    }
 
-    if (aiMesh->HasTangentsAndBitangents())
-    {
         auto& tangents = mesh.vertexStreams[static_cast<size_t>(VertexType::Tangent)].emplace_back();
-
-        for (size_t i = 0; i < aiMesh->mNumVertices; i++)
-        {
-            const aiVector3D tangent = ori.Rotate(aiMesh->mTangents[i]).NormalizeSafe();
-            tangents.emplace_back(tangent[0], tangent[1], tangent[2]);
-        }
+        tangents.resize(mesh.faceIndices.size());
 
         mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), VertexFormat::FLOAT3, VertexType::Tangent, 0);
 
         auto& binormals = mesh.vertexStreams[static_cast<size_t>(VertexType::Binormal)].emplace_back();
-
-        for (size_t i = 0; i < aiMesh->mNumVertices; i++)
-        {
-            const aiVector3D binormal = ori.Rotate(aiMesh->mBitangents[i]).NormalizeSafe();
-            binormals.emplace_back(binormal[0], binormal[1], binormal[2]);
-        }
+        binormals.resize(mesh.faceIndices.size());
 
         mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), VertexFormat::FLOAT3, VertexType::Binormal, 0);
     }
@@ -111,9 +94,11 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
         if (!aiMesh->HasTextureCoords(i))
             continue;
 
-        for (size_t j = 0; j < aiMesh->mNumVertices; j++)
+        texCoords.reserve(mesh.faceIndices.size());
+
+        for (const auto index : mesh.faceIndices)
         {
-            const aiVector3D& texCoord = aiMesh->mTextureCoords[i][j];
+            const aiVector3D& texCoord = aiMesh->mTextureCoords[i][index];
             texCoords.emplace_back(texCoord[0], texCoord[1]);
         }
 
@@ -130,15 +115,17 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
 
         if (hasVertexColors)
         {
-            for (size_t j = 0; j < aiMesh->mNumVertices; j++)
+            colors.reserve(mesh.faceIndices.size());
+
+            for (const auto index : mesh.faceIndices)
             {
-                const aiColor4D& color = aiMesh->mColors[i][j];
+                const aiColor4D& color = aiMesh->mColors[i][index];
                 colors.emplace_back(color[0], color[1], color[2], color[3]);
             }
         }
         else
         {
-            colors.resize(aiMesh->mNumVertices, Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+            colors.resize(mesh.faceIndices.size(), Vector4(1.0f, 1.0f, 1.0f, 1.0f));
         }
 
         mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), VertexFormat::FLOAT4, VertexType::Color, i);
@@ -146,8 +133,7 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
 
     if (aiMesh->HasBones())
     {
-        auto& blendIndices = mesh.vertexStreams[static_cast<size_t>(VertexType::BlendIndices)].emplace_back();
-        auto& blendWeights = mesh.vertexStreams[static_cast<size_t>(VertexType::BlendWeight)].emplace_back();
+        std::vector<Vector4> blendIndices, blendWeights;
 
         blendIndices.resize(aiMesh->mNumVertices, Vector4(-1, -1, -1, -1));
         blendWeights.resize(aiMesh->mNumVertices, Vector4(0.0f, 0.0f, 0.0f, 0.0f));
@@ -188,9 +174,24 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
             }
         }
 
+        auto& isolatedBlendIndices = mesh.vertexStreams[static_cast<size_t>(VertexType::BlendIndices)].emplace_back();
+        isolatedBlendIndices.reserve(mesh.faceIndices.size());
+
+        auto& isolatedBlendWeights = mesh.vertexStreams[static_cast<size_t>(VertexType::BlendWeight)].emplace_back();
+        isolatedBlendWeights.reserve(mesh.faceIndices.size());
+
+        for (const auto index : mesh.faceIndices)
+        {
+            isolatedBlendIndices.push_back(blendIndices[index]);
+            isolatedBlendWeights.push_back(blendWeights[index]);
+        }
+
         mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), VertexFormat::UBYTE4, VertexType::BlendIndices, 0);
         mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), VertexFormat::UBYTE4N, VertexType::BlendWeight, 0);
     }
+
+    for (size_t i = 0; i < mesh.faceIndices.size(); i++)
+        mesh.faceIndices[i] = static_cast<uint16_t>(i);
 
     return mesh;
 }
@@ -247,5 +248,7 @@ Model&& ModelConverter::convert()
 {
     convertNodesRecursively(aiScene->mRootNode, ~0, aiMatrix4x4());
     convertMeshesRecursively(aiScene->mRootNode, aiMatrix4x4());
+    TangentGenerator::generate(model);
+    ModelOptimizer::optimize(model);
     return std::move(model);
 }

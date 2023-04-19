@@ -18,6 +18,8 @@
 
 #include <meshoptimizer.h>
 
+#include <mikktspace.h>
+
 using Float3 = std::array<float, 3>;
 using Float4 = std::array<float, 4>;
 using Int4 = std::array<int32_t, 4>;

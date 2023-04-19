@@ -229,12 +229,27 @@
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </ForcedIncludeFiles>
     </ClCompile>
+    <ClCompile Include="..\..\Dependencies\MikkTSpace\mikktspace.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </ForcedIncludeFiles>
+    </ClCompile>
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshGroup.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelConverter.cpp" />
+    <ClCompile Include="ModelOptimizer.cpp" />
     <ClCompile Include="Node.cpp" />
     <ClCompile Include="Parameter.cpp" />
     <ClCompile Include="Pch.cpp">
@@ -244,6 +259,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SampleChunk.cpp" />
+    <ClCompile Include="TangentGenerator.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TextureUnit.cpp" />
     <ClCompile Include="VertexElement.cpp" />
@@ -255,10 +271,12 @@
     <ClInclude Include="MeshGroup.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelConverter.h" />
+    <ClInclude Include="ModelOptimizer.h" />
     <ClInclude Include="Node.h" />
     <ClInclude Include="Parameter.h" />
     <ClInclude Include="Pch.h" />
     <ClInclude Include="SampleChunk.h" />
+    <ClInclude Include="TangentGenerator.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TextureUnit.h" />
     <ClInclude Include="VertexElement.h" />
@@ -343,7 +361,7 @@
       <ForcedIncludeFiles>Pch.h</ForcedIncludeFiles>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\..\Dependencies\assimp\include;..\..\Dependencies\meshoptimizer\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\Dependencies\assimp\include;..\..\Dependencies\meshoptimizer\src;..\..\Dependencies\MikkTSpace;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -370,7 +388,8 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\..\Dependencies\assimp\include;..\..\Dependencies\meshoptimizer\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\Dependencies\assimp\include;..\..\Dependencies\meshoptimizer\src;..\..\Dependencies\MikkTSpace;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -393,7 +412,7 @@
       <ForcedIncludeFiles>Pch.h</ForcedIncludeFiles>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\..\Dependencies\assimp\include;..\..\Dependencies\meshoptimizer\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\Dependencies\assimp\include;..\..\Dependencies\meshoptimizer\src;..\..\Dependencies\MikkTSpace;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -420,7 +439,8 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\..\Dependencies\assimp\include;..\..\Dependencies\meshoptimizer\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\Dependencies\assimp\include;..\..\Dependencies\meshoptimizer\src;..\..\Dependencies\MikkTSpace;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
