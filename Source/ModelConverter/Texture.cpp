@@ -24,3 +24,11 @@ void Texture::write(SampleChunkWriter& writer) const
         writer.write(type);
     });
 }
+
+void Texture::save(const char* path) const
+{
+    SampleChunkWriter::write(1, [&](SampleChunkWriter& writer)
+    {
+        write(writer);
+    }).save(path);
+}
