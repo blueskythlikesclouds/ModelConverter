@@ -147,9 +147,9 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
         for (size_t i = 0; i < aiMesh->mNumBones; i++)
         {
             const aiBone* aiBone = aiMesh->mBones[i];
-            const auto modelNodeIndex = nodes.find(aiBone->mName.C_Str());
+            const auto modelNodeIndex = nodeIndices.find(aiBone->mName.C_Str());
 
-            if (modelNodeIndex == nodes.end())
+            if (modelNodeIndex == nodeIndices.end())
                 continue;
 
             const size_t meshNodeIndex = mesh.nodeIndices.size();
@@ -348,6 +348,12 @@ void ModelConverter::convertMaterial(const aiMaterial* aiMaterial)
     }
 }
 
+void ModelConverter::convertMaterials()
+{
+    for (size_t i = 0; i < aiScene->mNumMaterials; i++)
+        convertMaterial(aiScene->mMaterials[i]);
+}
+
 void ModelConverter::convertNodesRecursively(const aiNode* aiNode, size_t parentIndex, const aiMatrix4x4& parentMatrix)
 {
     const aiMatrix4x4 matrix = parentMatrix * aiNode->mTransformation;
@@ -361,12 +367,19 @@ void ModelConverter::convertNodesRecursively(const aiNode* aiNode, size_t parent
         node.name = aiNode->mName.C_Str();
         memcpy(&node.matrix, &aiMatrix4x4(matrix).Inverse(), sizeof(matrix));
 
-        nodes.emplace(aiNode->mName.C_Str(), nodeIndex);
         parentIndex = nodeIndex;
     }
 
     for (size_t i = 0; i < aiNode->mNumChildren; i++)
         convertNodesRecursively(aiNode->mChildren[i], parentIndex, matrix);
+}
+
+void ModelConverter::convertNodes()
+{
+    convertNodesRecursively(aiScene->mRootNode, ~0, aiMatrix4x4());
+
+    for (const auto& node : model.nodes)
+        nodeIndices.emplace(node.name, nodeIndices.size());
 }
 
 void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatrix4x4& parentMatrix)
@@ -411,14 +424,16 @@ void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatr
         convertMeshesRecursively(aiNode->mChildren[i], matrix);
 }
 
+void ModelConverter::convertMeshes()
+{
+    convertMeshesRecursively(aiScene->mRootNode, aiMatrix4x4());
+}
+
 void ModelConverter::convert(const Config& config)
 {
-    convertNodesRecursively(aiScene->mRootNode, ~0, aiMatrix4x4());
-
-    for (size_t i = 0; i < aiScene->mNumMaterials; i++)
-        convertMaterial(aiScene->mMaterials[i]);
-
-    convertMeshesRecursively(aiScene->mRootNode, aiMatrix4x4());
+    convertMaterials();
+    convertNodes();
+    convertMeshes();
 
     TangentGenerator::generate(model);
 
