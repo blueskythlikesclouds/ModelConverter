@@ -6,46 +6,42 @@ struct SampleChunk
 {
     struct OffsetWrite;
 
-    FILE* file;
+    std::vector<uint8_t> data;
+    size_t position;
     std::list<OffsetWrite> offsetWrites;
 
-    long beginOffset;
+    size_t beginOffset;
     uint32_t dataVersion;
-    long dataOffset;
+    size_t dataOffset;
 
-    SampleChunk(FILE* file);
-    SampleChunk(const char* path);
-
+    SampleChunk();
     ~SampleChunk();
 
-    long tell() const;
-    void seek(long offset, int origin) const;
-
-    void write(const void* value, size_t size) const;
+    void write(const void* value, size_t size);
 
     template<typename T>
-    void write(const T& value) const
+    void write(const T& value)
     {
         const T bigEndianValue = endianSwap(value);
         write(&bigEndianValue, sizeof(T));
     }
 
-    void write(const std::string& value) const;
-    void write(const char* value) const;
+    void write(const std::string& value);
+    void write(const char* value);
 
-    void writeOffset(long alignment, std::function<void()>&& function);
+    void writeOffset(size_t alignment, std::function<void()>&& function);
 
     template<typename T>
-    void writeOffset(long alignment, const T& function)
+    void writeOffset(size_t alignment, const T& function)
     {
         writeOffset(alignment, std::function<void()>(function));
     }
 
-    void align(long alignment) const;
-    void writeNulls(size_t count) const;
+    void align(size_t alignment);
+    void writeNulls(size_t count);
 
     void begin(uint32_t version);
     void end();
 
-    void close();
+    void save(const char* path) const;
 };

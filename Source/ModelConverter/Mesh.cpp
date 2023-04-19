@@ -30,18 +30,18 @@ void Mesh::write(SampleChunk& out) const
     out.write(static_cast<uint32_t>(vertexSize));
     out.writeOffset(4, [&, vertexSize]
     {
-        const long offset = out.tell();
+        const size_t offset = out.position;
 
         for (size_t i = 0; i < vertexStreams[0][0].size(); i++)
         {
             for (const auto& vertexElement : vertexElements)
             {
-                out.seek(static_cast<long>(offset + (i * vertexSize) + vertexElement.offset), SEEK_SET);
+                out.position = offset + (i * vertexSize) + vertexElement.offset;
                 vertexElement.write(out, vertexStreams[static_cast<size_t>(vertexElement.type)][vertexElement.index][i]);
             }
         }
 
-        out.seek(static_cast<long>(offset + vertexSize * vertexStreams[0][0].size()), SEEK_SET);
+        out.position = offset + vertexSize * vertexStreams[0][0].size();
     });
     out.writeOffset(4, [&]
     {

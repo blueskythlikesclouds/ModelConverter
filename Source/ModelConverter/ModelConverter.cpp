@@ -244,11 +244,11 @@ void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatr
         convertMeshesRecursively(aiNode->mChildren[i], matrix);
 }
 
-Model&& ModelConverter::convert()
+Model&& ModelConverter::convert(const Config& config)
 {
     convertNodesRecursively(aiScene->mRootNode, ~0, aiMatrix4x4());
     convertMeshesRecursively(aiScene->mRootNode, aiMatrix4x4());
     TangentGenerator::generate(model);
-    ModelOptimizer::optimize(model);
+    ModelOptimizer::optimize(model, config);
     return std::move(model);
 }

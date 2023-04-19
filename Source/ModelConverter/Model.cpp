@@ -61,9 +61,9 @@ void Model::write(SampleChunk& out) const
 
 void Model::save(const char* path) const
 {
-    SampleChunk out(path);
+    SampleChunk out;
     out.begin(nodes.size() > 256 ? 6 : 5);
     write(out);
     out.end();
-    out.close();
+    out.save(path);
 }

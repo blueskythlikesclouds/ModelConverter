@@ -2,12 +2,12 @@
 
 struct SampleChunk::OffsetWrite
 {
-    long alignment;
+    size_t alignment;
     std::function<void()> function;
-    long offsetPosition;
-    long offset;
+    size_t offsetPosition;
+    size_t offset;
 
-    OffsetWrite(long alignment, std::function<void()>&& function, long offsetPosition)
+    OffsetWrite(size_t alignment, std::function<void()>&& function, size_t offsetPosition)
         : alignment(alignment)
         , function(std::move(function))
         , offsetPosition(offsetPosition)
@@ -15,79 +15,60 @@ struct SampleChunk::OffsetWrite
     {
     }
 
-    void write(const SampleChunk& sampleChunk)
+    void write(SampleChunk& sampleChunk)
     {
         sampleChunk.align(alignment);
-        offset = ftell(sampleChunk.file);
+        offset = sampleChunk.position;
         function();
     }
 };
 
-SampleChunk::SampleChunk(FILE* file)
-    : file(file)
+SampleChunk::SampleChunk()
+    : position()
     , beginOffset()
     , dataVersion()
     , dataOffset()
 {
 }
 
-SampleChunk::SampleChunk(const char* path)
-    : SampleChunk(fopen(path, "wb"))
+SampleChunk::~SampleChunk() = default;
+
+void SampleChunk::write(const void* value, size_t size)
 {
+    if (position + size > data.size())
+        data.resize(position + size);
+
+    memcpy(&data[position], value, size);
+    position += size;
 }
 
-SampleChunk::~SampleChunk()
-{
-    assert(offsetWrites.empty());
-
-    if (file)
-        fclose(file);
-}
-
-long SampleChunk::tell() const
-{
-    return ftell(file);
-}
-
-void SampleChunk::seek(long offset, int origin) const
-{
-    fseek(file, offset, origin);
-}
-
-void SampleChunk::write(const void* value, size_t size) const
-{
-    fwrite(value, 1, size, file);
-}
-
-void SampleChunk::write(const std::string& value) const
+void SampleChunk::write(const std::string& value)
 {
     write(value.data(), value.size() + 1);
 }
 
-void SampleChunk::write(const char* value) const
+void SampleChunk::write(const char* value)
 {
     write(value, strlen(value) + 1);
 }
 
-void SampleChunk::writeOffset(long alignment, std::function<void()>&& function)
+void SampleChunk::writeOffset(size_t alignment, std::function<void()>&& function)
 {
-    offsetWrites.emplace_back(alignment, std::move(function), ftell(file));
+    offsetWrites.emplace_back(alignment, std::move(function), position);
     write<uint32_t>(0);
 }
 
-void SampleChunk::align(long alignment) const
+void SampleChunk::align(size_t alignment)
 {
-    long position = ftell(file);
-    const long aligned = (position + alignment - 1) & ~(alignment - 1);
+    const size_t aligned = (position + alignment - 1) & ~(alignment - 1);
 
-    while (position < aligned)
-    {
-        write<uint8_t>(0);
-        ++position;
-    }
+    if (data.size() < aligned)
+        data.resize(aligned);
+
+    position = aligned;
 }
 
-void SampleChunk::writeNulls(size_t count) const
+void SampleChunk::writeNulls(size_t count)
 {
     while (count > 0)
     {
@@ -98,10 +79,10 @@ void SampleChunk::writeNulls(size_t count) const
 
 void SampleChunk::begin(uint32_t version)
 {
-    beginOffset = ftell(file);
+    beginOffset = position;
     dataVersion = version;
     writeNulls(24);
-    dataOffset = ftell(file);
+    dataOffset = position;
 }
 
 void SampleChunk::end()
@@ -110,15 +91,15 @@ void SampleChunk::end()
         offsetWrite.write(*this);
 
     align(4);
-    const long relocationOffset = ftell(file);
+    const size_t relocationOffset = position;
 
     for (const auto& offsetWrite : offsetWrites)
     {
-        fseek(file, offsetWrite.offsetPosition, SEEK_SET);
+        position = offsetWrite.offsetPosition;
         write(static_cast<uint32_t>(offsetWrite.offset - dataOffset));
     }
 
-    fseek(file, relocationOffset, SEEK_SET);
+    position = relocationOffset;
 
     write(static_cast<uint32_t>(offsetWrites.size()));
 
@@ -127,9 +108,8 @@ void SampleChunk::end()
 
     offsetWrites.clear();
 
-    const long endOffset = ftell(file);
-
-    fseek(file, beginOffset, SEEK_SET);
+    const size_t endOffset = position;
+    position = beginOffset;
 
     write(static_cast<uint32_t>(endOffset - beginOffset));
     write(dataVersion);
@@ -138,14 +118,12 @@ void SampleChunk::end()
     write(static_cast<uint32_t>(relocationOffset - beginOffset));
     write<uint32_t>(0);
 
-    fseek(file, endOffset, SEEK_SET);
+    position = endOffset;
 }
 
-void SampleChunk::close()
+void SampleChunk::save(const char* path) const
 {
-    if (file)
-    {
-        fclose(file);
-        file = nullptr;
-    }
+    FILE* file = fopen(path, "wb");
+    fwrite(data.data(), 1, data.size(), file);
+    fclose(file);
 }

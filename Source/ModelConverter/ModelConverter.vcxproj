@@ -265,6 +265,7 @@
     <ClCompile Include="VertexElement.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Config.h" />
     <ClInclude Include="EndianSwap.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />

@@ -1,10 +1,14 @@
 ﻿#include "ModelOptimizer.h"
 
+#include "Config.h"
 #include "Mesh.h"
 #include "MeshGroup.h"
 #include "Model.h"
+#include "VertexElement.h"
 
-static void optimizeMesh(Mesh& mesh)
+struct Config;
+
+static void optimizeMesh(Mesh& mesh, const Config& config)
 {
     std::vector<meshopt_Stream> streams;
 
@@ -35,7 +39,11 @@ static void optimizeMesh(Mesh& mesh)
     }
 
     meshopt_remapIndexBuffer(mesh.faceIndices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), remap.data());
-    meshopt_optimizeVertexCache(mesh.faceIndices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), vertexCount);
+
+    if (config.triangles)
+        meshopt_optimizeVertexCache(mesh.faceIndices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), vertexCount);
+    else
+        meshopt_optimizeVertexCacheStrip(mesh.faceIndices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), vertexCount);
 
     remap.resize(vertexCount);
     vertexCount = meshopt_optimizeVertexFetchRemap(remap.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), vertexCount);
@@ -54,32 +62,64 @@ static void optimizeMesh(Mesh& mesh)
 
     meshopt_remapIndexBuffer(mesh.faceIndices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), remap.data());
 
-    std::vector<uint16_t> indices;
-    indices.resize(meshopt_stripifyBound(mesh.faceIndices.size()));
-    indices.resize(meshopt_stripify(indices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), vertexCount, static_cast<uint16_t>(-1)));
-    std::swap(mesh.faceIndices, indices);
+    if (!config.triangles)
+    {
+        std::vector<uint16_t> indices;
+        indices.resize(meshopt_stripifyBound(mesh.faceIndices.size()));
+        indices.resize(meshopt_stripify(indices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), vertexCount, static_cast<uint16_t>(-1)));
+        std::swap(mesh.faceIndices, indices);
+    }
+
+    if (config.optimizedVertexFormat)
+    {
+        for (auto& vertexElement : mesh.vertexElements)
+        {
+            switch (vertexElement.type)
+            {
+            case VertexType::Normal:
+            case VertexType::Tangent:
+            case VertexType::Binormal:
+                vertexElement.format = VertexFormat::DEC3N;
+                break;
+
+            case VertexType::TexCoord:
+                vertexElement.format = VertexFormat::FLOAT2_HALF;
+                break;
+
+            case VertexType::Color:
+                vertexElement.format = VertexFormat::UBYTE4N;
+                break;
+            }
+        }
+
+        mesh.vertexElements[0].offset = 0;
+
+        for (size_t i = 1; i < mesh.vertexElements.size(); i++)
+            mesh.vertexElements[i].offset = static_cast<uint16_t>(mesh.vertexElements[i - 1].getNextOffset());
+    }
 }
 
-static void optimizeMeshGroup(MeshGroup& meshGroup)
+static void optimizeMeshGroup(MeshGroup& meshGroup, const Config& config)
 {
     for (auto& mesh : meshGroup.opaqueMeshes)
-        optimizeMesh(mesh);
+        optimizeMesh(mesh, config);
 
     for (auto& mesh : meshGroup.transparentMeshes)
-        optimizeMesh(mesh);
+        optimizeMesh(mesh, config);
 
     for (auto& mesh : meshGroup.punchThroughMeshes)
-        optimizeMesh(mesh);
+        optimizeMesh(mesh, config);
 
     for (auto& group : meshGroup.specialMeshGroups)
     {
         for (auto& mesh : group)
-            optimizeMesh(mesh);
+            optimizeMesh(mesh, config);
     }
 }
 
-void ModelOptimizer::optimize(Model& model)
+void ModelOptimizer::optimize(Model& model, const Config& config)
 {
     for (auto& meshGroup : model.meshGroups)
-        optimizeMeshGroup(meshGroup);
+        optimizeMeshGroup(meshGroup, config);
+
 }

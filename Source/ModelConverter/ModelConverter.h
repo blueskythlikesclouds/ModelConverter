@@ -2,6 +2,7 @@
 
 #include "Model.h"
 
+struct Config;
 struct Mesh;
 
 struct ModelConverter
@@ -19,5 +20,5 @@ struct ModelConverter
     void convertNodesRecursively(const aiNode* aiNode, size_t parentIndex, const aiMatrix4x4& parentMatrix);
     void convertMeshesRecursively(const aiNode* aiNode, const aiMatrix4x4& parentMatrix);
 
-    Model&& convert();
+    Model&& convert(const Config& config);
 };
