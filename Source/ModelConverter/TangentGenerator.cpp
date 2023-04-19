@@ -105,7 +105,7 @@ static void addMeshGroup(TangentGenerator::Context& context, MeshGroup& meshGrou
     for (auto& mesh : meshGroup.punchThroughMeshes)
         addMesh(context, mesh);
 
-    for (auto& group : meshGroup.specialMeshGroups)
+    for (auto& group : meshGroup.specialMeshGroups | std::views::values)
     {
         for (auto& mesh : group)
             addMesh(context, mesh);

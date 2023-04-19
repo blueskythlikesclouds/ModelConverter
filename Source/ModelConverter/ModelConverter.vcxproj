@@ -259,6 +259,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SampleChunk.cpp" />
+    <ClCompile Include="Tag.cpp" />
     <ClCompile Include="TangentGenerator.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TextureUnit.cpp" />
@@ -277,6 +278,7 @@
     <ClInclude Include="Parameter.h" />
     <ClInclude Include="Pch.h" />
     <ClInclude Include="SampleChunk.h" />
+    <ClInclude Include="Tag.h" />
     <ClInclude Include="TangentGenerator.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TextureUnit.h" />

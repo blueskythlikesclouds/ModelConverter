@@ -32,7 +32,7 @@ void MeshGroup::write(SampleChunk& out) const
     {
         out.writeOffset(4, [&]
         {
-            for (auto& type : specialMeshGroupTypes)
+            for (const auto& type : specialMeshGroups | std::views::keys)
             {
                 out.writeOffset(1, [&]
                 {
@@ -42,7 +42,7 @@ void MeshGroup::write(SampleChunk& out) const
         });
         out.writeOffset(4, [&]
         {
-           for (auto& group : specialMeshGroups)
+           for (auto& group : specialMeshGroups | std::views::values)
            {
                out.writeOffset(4, [&]
                {
@@ -52,7 +52,7 @@ void MeshGroup::write(SampleChunk& out) const
         });
         out.writeOffset(4, [&]
         {
-            for (auto& group : specialMeshGroups)
+            for (auto& group : specialMeshGroups | std::views::values)
             {
                 out.writeOffset(4, [&]
                 {

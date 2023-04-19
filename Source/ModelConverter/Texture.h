@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+struct SampleChunk;
+
 enum class AddressMode
 {
     Repeat,
@@ -17,4 +19,8 @@ struct Texture
     AddressMode addressU;
     AddressMode addressV;
     std::string type;
+
+    Texture();
+
+    void write(SampleChunk& out) const;
 };

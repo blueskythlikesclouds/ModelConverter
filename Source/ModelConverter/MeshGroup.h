@@ -8,9 +8,7 @@ struct MeshGroup
     std::vector<Mesh> opaqueMeshes;
     std::vector<Mesh> transparentMeshes;
     std::vector<Mesh> punchThroughMeshes;
-
-    std::vector<std::string> specialMeshGroupTypes;
-    std::vector<std::vector<Mesh>> specialMeshGroups;
+    std::unordered_map<std::string, std::vector<Mesh>> specialMeshGroups;
 
     std::string name;
 

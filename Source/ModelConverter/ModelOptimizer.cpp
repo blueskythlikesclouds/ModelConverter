@@ -40,7 +40,7 @@ static void optimizeMesh(Mesh& mesh, const Config& config)
 
     meshopt_remapIndexBuffer(mesh.faceIndices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), remap.data());
 
-    if (config.triangles)
+    if (config.useTriangles)
         meshopt_optimizeVertexCache(mesh.faceIndices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), vertexCount);
     else
         meshopt_optimizeVertexCacheStrip(mesh.faceIndices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), vertexCount);
@@ -62,7 +62,7 @@ static void optimizeMesh(Mesh& mesh, const Config& config)
 
     meshopt_remapIndexBuffer(mesh.faceIndices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), remap.data());
 
-    if (!config.triangles)
+    if (!config.useTriangles)
     {
         std::vector<uint16_t> indices;
         indices.resize(meshopt_stripifyBound(mesh.faceIndices.size()));
@@ -110,7 +110,7 @@ static void optimizeMeshGroup(MeshGroup& meshGroup, const Config& config)
     for (auto& mesh : meshGroup.punchThroughMeshes)
         optimizeMesh(mesh, config);
 
-    for (auto& group : meshGroup.specialMeshGroups)
+    for (auto& group : meshGroup.specialMeshGroups | std::views::values)
     {
         for (auto& mesh : group)
             optimizeMesh(mesh, config);

@@ -1,10 +1,14 @@
 ﻿#include "ModelConverter.h"
 
+#include "Material.h"
 #include "Mesh.h"
 #include "MeshGroup.h"
 #include "ModelOptimizer.h"
 #include "Node.h"
+#include "Parameter.h"
+#include "Tag.h"
 #include "TangentGenerator.h"
+#include "Texture.h"
 #include "TextureUnit.h"
 #include "VertexElement.h"
 
@@ -24,6 +28,8 @@ ModelConverter::ModelConverter(const char* path)
         aiProcess_FlipUVs);
 }
 
+ModelConverter::~ModelConverter() = default;
+
 Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix)
 {
     aiQuaternion ori;
@@ -31,7 +37,7 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
     matrix.DecomposeNoScaling(ori, pos);
 
     Mesh mesh;
-    mesh.materialName = aiScene->mMaterials[aiMesh->mMaterialIndex]->GetName().C_Str();
+    mesh.materialName = Tags::getName(aiScene->mMaterials[aiMesh->mMaterialIndex]->GetName().C_Str());
     mesh.faceIndices.reserve(aiMesh->mNumFaces * 3);
 
     for (size_t i = 0; i < aiMesh->mNumFaces; i++)
@@ -196,6 +202,147 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
     return mesh;
 }
 
+void ModelConverter::convertMaterial(const aiMaterial* aiMaterial)
+{
+    const aiString str = aiMaterial->GetName();
+    const Tags tags(str.C_Str());
+
+    auto& material = materials.emplace_back();
+
+    material.name = tags.name;
+    material.shader = tags.getValue("SHDR", 0, "Common_d");
+    material.layer = tags.getValue("LYR", 0, "solid");
+    material.alphaThreshold = 128;
+    material.doubleSided = !tags.getBoolValue("CULL", 0, true);
+    material.additive = tags.getBoolValue("ADD", 0, false);
+
+    for (size_t i = 0; i <= AI_TEXTURE_TYPE_MAX; i++)
+    {
+        const uint32_t count = aiMaterial->GetTextureCount(static_cast<aiTextureType>(i));
+        if (count == 0)
+            continue;
+
+        std::string type;
+
+        switch (i)
+        {
+        case aiTextureType_DIFFUSE: type = "diffuse"; break;
+        case aiTextureType_SPECULAR: type = "specular"; break;
+        case aiTextureType_AMBIENT: type = "ambient"; break;
+        case aiTextureType_EMISSIVE: type = "emission"; break;
+        case aiTextureType_HEIGHT: type = "height"; break;
+        case aiTextureType_NORMALS: type = "normal"; break;
+        case aiTextureType_SHININESS: type = "gloss"; break;
+        case aiTextureType_OPACITY: type = "opacity"; break;
+        case aiTextureType_DISPLACEMENT: type = "displacement"; break;
+        case aiTextureType_REFLECTION: type = "reflection"; break;
+        default: type = "unknown"; break;
+        }
+
+        for (uint32_t j = 0; j < count; j++)
+        {
+            aiString path;
+            uint32_t uv = 0;
+            aiTextureMapMode mode = aiTextureMapMode_Wrap;
+
+            aiMaterial->GetTexture(static_cast<aiTextureType>(i), j, &path, nullptr, &uv, nullptr, nullptr, &mode);
+
+            auto& texture = material.textures.emplace_back();
+
+            texture.pictureName = path.C_Str();
+
+            size_t index = texture.pictureName.find_last_of("\\/");
+            if (index != std::string::npos)
+                texture.pictureName.erase(0, index + 1);
+
+            index = texture.pictureName.find_last_of('.');
+            if (index != std::string::npos)
+                texture.pictureName.erase(index);
+
+            texture.texCoordIndex = static_cast<uint8_t>(uv);
+
+            AddressMode addressMode = AddressMode::Repeat;
+
+            switch (mode)
+            {
+            case aiTextureMapMode_Wrap: addressMode = AddressMode::Repeat; break;
+            case aiTextureMapMode_Clamp: addressMode = AddressMode::Clamp; break;
+            case aiTextureMapMode_Decal: addressMode = AddressMode::Border; break;
+            case aiTextureMapMode_Mirror: addressMode = AddressMode::Mirror; break;
+            }
+
+            texture.addressU = addressMode;
+            texture.addressV = addressMode;
+
+            texture.type = type;
+        }
+    }
+
+    auto range = tags.indices.equal_range("TXTR");
+
+    for (auto it = range.first; it != range.second; ++it)
+    {
+        const Tag& tag = tags[it->second];
+
+        auto& texture = material.textures.emplace_back();
+        texture.type = tag.getValue(0, std::string_view());
+        texture.pictureName = tag.getValue(1, std::string_view());
+
+        const size_t index = texture.pictureName.find_last_of('.');
+        if (index != std::string::npos)
+            texture.pictureName.erase(index);
+    }
+
+    for (uint32_t i = 0; i < material.textures.size(); i++)
+    {
+        char num[16];
+        sprintf(num, "-%04d", i);
+
+        material.textures[i].name = material.name + num;
+    }
+
+    material.float4Parameters.push_back(Parameter<Float4>("diffuse", { { 1.0f, 1.0f, 1.0f, 0.0f } }));
+    material.float4Parameters.push_back(Parameter<Float4>("ambient", { { 1.0f, 1.0f, 1.0f, 0.0f } }));
+    material.float4Parameters.push_back(Parameter<Float4>("specular", { { 0.9f, 0.9f, 0.9f, 0.0f } }));
+    material.float4Parameters.push_back(Parameter<Float4>("emissive", { { 0.0f, 0.0f, 0.0f, 0.0f } }));
+    material.float4Parameters.push_back(Parameter<Float4>("power_gloss_level", { { 50.0f, 0.1f, 0.01f, 0.0f } }));
+    material.float4Parameters.push_back(Parameter<Float4>("opacity_reflection_refraction_spectype", { { 1.0f, 0.0f, 1.0f, 0.0f } }));
+
+    std::unordered_map<std::string_view, size_t> indices;
+
+    for (auto& parameter : material.float4Parameters)
+        indices.emplace(parameter.name, indices.size());
+
+    range = tags.indices.equal_range("PMTR");
+
+    for (auto it = range.first; it != range.second; ++it)
+    {
+        const Tag& tag = tags[it->second];
+
+        const auto name = tag.getValue(0, std::string_view());
+        if (name.empty())
+            continue;
+
+        size_t index;
+
+        if (auto pair = indices.find(name); pair != indices.end())
+        {
+            index = pair->second;
+        }
+        else
+        {
+            index = material.float4Parameters.size();
+            material.float4Parameters.push_back(Parameter<Float4>(std::string(name), { { 1.0f, 1.0f, 1.0f, 0.0f } }));
+        }
+
+        for (size_t i = 1; i < tag.values.size(); i++)
+        {
+            auto& value = material.float4Parameters[index].values[0][i];
+            value = tag.getFloatValue(i, value);
+        }
+    }
+}
+
 void ModelConverter::convertNodesRecursively(const aiNode* aiNode, size_t parentIndex, const aiMatrix4x4& parentMatrix)
 {
     const aiMatrix4x4 matrix = parentMatrix * aiNode->mTransformation;
@@ -234,7 +381,21 @@ void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatr
             Mesh mesh = convertMesh(aiMesh, matrix);
 
             if (!mesh.faceIndices.empty() && !mesh.vertexStreams[0].empty() && !mesh.vertexStreams[0][0].empty())
-                group.opaqueMeshes.emplace_back(std::move(mesh));
+            {
+                auto& material = materials[aiMesh->mMaterialIndex];
+
+                if (material.layer == "solid")
+                    group.opaqueMeshes.push_back(std::move(mesh));
+
+                else if (material.layer == "trans")
+                    group.transparentMeshes.push_back(std::move(mesh));
+
+                else if (material.layer == "punch")
+                    group.punchThroughMeshes.push_back(std::move(mesh));
+
+                else
+                    group.specialMeshGroups[material.layer].push_back(std::move(mesh));
+            }
         }
 
         group.name = aiNode->mName.C_Str();
@@ -244,11 +405,16 @@ void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatr
         convertMeshesRecursively(aiNode->mChildren[i], matrix);
 }
 
-Model&& ModelConverter::convert(const Config& config)
+void ModelConverter::convert(const Config& config)
 {
     convertNodesRecursively(aiScene->mRootNode, ~0, aiMatrix4x4());
+
+    for (size_t i = 0; i < aiScene->mNumMaterials; i++)
+        convertMaterial(aiScene->mMaterials[i]);
+
     convertMeshesRecursively(aiScene->mRootNode, aiMatrix4x4());
+
     TangentGenerator::generate(model);
+
     ModelOptimizer::optimize(model, config);
-    return std::move(model);
 }

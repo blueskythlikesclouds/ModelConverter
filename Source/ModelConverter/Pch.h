@@ -4,10 +4,13 @@
 
 #include <array>
 #include <cassert>
+#include <charconv>
 #include <cstdint>
+#include <filesystem>
 #include <functional>
 #include <list>
 #include <memory>
+#include <ranges>
 #include <string>
 #include <vector>
 

@@ -3,5 +3,5 @@
 struct Config
 {
     bool optimizedVertexFormat;
-    bool triangles;
+    bool useTriangles;
 };
