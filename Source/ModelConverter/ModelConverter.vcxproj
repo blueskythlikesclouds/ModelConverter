@@ -247,9 +247,9 @@
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshGroup.cpp" />
+    <ClCompile Include="ModelProcessor.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelConverter.cpp" />
-    <ClCompile Include="ModelOptimizer.cpp" />
     <ClCompile Include="Node.cpp" />
     <ClCompile Include="OffsetWrite.cpp" />
     <ClCompile Include="Parameter.cpp" />
@@ -262,7 +262,6 @@
     <ClCompile Include="SampleChunkWriter.cpp" />
     <ClCompile Include="SampleChunkNode.cpp" />
     <ClCompile Include="Tag.cpp" />
-    <ClCompile Include="TangentGenerator.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TextureUnit.cpp" />
     <ClCompile Include="VertexElement.cpp" />
@@ -273,10 +272,10 @@
     <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshGroup.h" />
+    <ClInclude Include="ModelProcessor.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelConverter.h" />
     <ClInclude Include="ModelHolder.h" />
-    <ClInclude Include="ModelOptimizer.h" />
     <ClInclude Include="Node.h" />
     <ClInclude Include="OffsetWrite.h" />
     <ClInclude Include="Parameter.h" />
@@ -284,7 +283,6 @@
     <ClInclude Include="SampleChunkWriter.h" />
     <ClInclude Include="SampleChunkNode.h" />
     <ClInclude Include="Tag.h" />
-    <ClInclude Include="TangentGenerator.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TextureUnit.h" />
     <ClInclude Include="VertexElement.h" />

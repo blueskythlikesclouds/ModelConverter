@@ -4,11 +4,10 @@
 #include "Mesh.h"
 #include "MeshGroup.h"
 #include "ModelHolder.h"
-#include "ModelOptimizer.h"
+#include "ModelProcessor.h"
 #include "Node.h"
 #include "Parameter.h"
 #include "Tag.h"
-#include "TangentGenerator.h"
 #include "Texture.h"
 #include "TextureUnit.h"
 #include "VertexElement.h"
@@ -25,24 +24,13 @@ bool ModelConverter::convert(const char* path, Config config, ModelHolder& holde
 {
     ModelConverter converter(holder);
 
-    uint32_t flags = 
-        aiProcess_JoinIdenticalVertices |
-        aiProcess_Triangulate |
-        aiProcess_SplitLargeMeshes |
-        aiProcess_LimitBoneWeights |
-        aiProcess_SortByPType |
-        aiProcess_FlipUVs;
-
-    if ((config & CONFIG_FLAG_NO_NODE_LIMIT) == 0)
-    {
-        flags |= aiProcess_SplitByBoneCount;
-        converter.importer.SetPropertyInteger(AI_CONFIG_PP_SBBC_MAX_BONES, 25);
-    }
-
-    converter.importer.SetPropertyInteger(AI_CONFIG_PP_SLM_VERTEX_LIMIT, (config & CONFIG_FLAG_TRIANGLE_LIST) ? 32768 : 32767);
     converter.importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
 
-    converter.aiScene = converter.importer.ReadFile(path, flags);
+    converter.aiScene = converter.importer.ReadFile(path, 
+        aiProcess_Triangulate |
+        aiProcess_LimitBoneWeights |
+        aiProcess_SortByPType |
+        aiProcess_FlipUVs);
 
     if (converter.aiScene)
     {
@@ -50,8 +38,7 @@ bool ModelConverter::convert(const char* path, Config config, ModelHolder& holde
         converter.convertNodes();
         converter.convertMeshes();
 
-        TangentGenerator::generate(holder.model);
-        ModelOptimizer::optimize(holder.model, config);
+        ModelProcessor::process(holder.model, config);
 
         return true;
     }

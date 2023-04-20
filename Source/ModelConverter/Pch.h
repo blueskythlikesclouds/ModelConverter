@@ -12,6 +12,7 @@
 #include <memory>
 #include <ranges>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include <assimp/config.h>

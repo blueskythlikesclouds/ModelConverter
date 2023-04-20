@@ -59,14 +59,13 @@
       <Filter>Dependencies</Filter>
     </ClCompile>
     <ClCompile Include="ModelConverter.cpp" />
-    <ClCompile Include="ModelOptimizer.cpp" />
-    <ClCompile Include="TangentGenerator.cpp" />
     <ClCompile Include="Tag.cpp" />
     <ClCompile Include="..\..\Dependencies\MikkTSpace\mikktspace.c">
       <Filter>Dependencies</Filter>
     </ClCompile>
     <ClCompile Include="OffsetWrite.cpp" />
     <ClCompile Include="SampleChunkNode.cpp" />
+    <ClCompile Include="ModelProcessor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Pch.h" />
@@ -82,13 +81,12 @@
     <ClInclude Include="Model.h" />
     <ClInclude Include="Node.h" />
     <ClInclude Include="ModelConverter.h" />
-    <ClInclude Include="ModelOptimizer.h" />
-    <ClInclude Include="TangentGenerator.h" />
     <ClInclude Include="Tag.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="OffsetWrite.h" />
     <ClInclude Include="SampleChunkNode.h" />
     <ClInclude Include="ModelHolder.h" />
+    <ClInclude Include="ModelProcessor.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Dependencies">
