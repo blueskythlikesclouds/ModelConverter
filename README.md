@@ -2,6 +2,8 @@
 
 Model Converter is a tool that converts 3D model formats like FBX to Hedgehog Engine .model files.
 
+Are you looking into converting .model files to FBX instead? [See modelfbx in libgens-sonicglvl.](https://github.com/DarioSamo/libgens-sonicglvl.git)
+
 ## Usage
 
 ```
