@@ -16,7 +16,7 @@ struct ModelConverter
     std::vector<Material> materials;
     std::unordered_map<std::string_view, size_t> nodeIndices;
 
-    ModelConverter(const char* path);
+    ModelConverter(const char* path, Config config);
     ~ModelConverter();
 
     Mesh convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix);

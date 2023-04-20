@@ -23,7 +23,7 @@ void Mesh::write(SampleChunkWriter& writer, uint32_t dataVersion) const
     writer.writeOffset(2, [&]
     {
         for (const auto index : faceIndices)
-            writer.write<uint16_t>(index);
+            writer.write(static_cast<uint16_t>(index));
     });
 
     writer.write(static_cast<uint32_t>(vertexStreams[0][0].size()));

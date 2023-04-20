@@ -59,7 +59,7 @@ int main(int argc, const char* argv[])
         dst += ".model";
     }
 
-    ModelConverter converter(src.c_str());
+    ModelConverter converter(src.c_str(), config);
     converter.convert(config);
     converter.model.save(dst.c_str(), config);
 

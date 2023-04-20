@@ -62,7 +62,7 @@ static void optimizeMesh(Mesh& mesh, Config config)
 
     if ((config & CONFIG_FLAG_TRIANGLELIST_PRIMITIVE_TOPOLOGY) == 0)
     {
-        std::vector<uint16_t> indices;
+        std::vector<uint32_t> indices;
         indices.resize(meshopt_stripifyBound(mesh.faceIndices.size()));
         indices.resize(meshopt_stripify(indices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), vertexCount, static_cast<uint16_t>(-1)));
         std::swap(mesh.faceIndices, indices);

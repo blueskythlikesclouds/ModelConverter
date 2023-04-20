@@ -87,7 +87,7 @@ void Model::save(const char* path, Config config) const
         if (config & CONFIG_FLAG_TRIANGLELIST_PRIMITIVE_TOPOLOGY)
             model.children.emplace_back("Topology", 3);
 
-        model.children.emplace_back("Contexts", 5, [&, dataVersion](SampleChunkWriter& writer)
+        model.children.emplace_back("Contexts", dataVersion, [&, dataVersion](SampleChunkWriter& writer)
         {
             write(writer, dataVersion);
         });

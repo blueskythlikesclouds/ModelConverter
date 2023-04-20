@@ -1,5 +1,6 @@
 ﻿#include "ModelConverter.h"
 
+#include "Config.h"
 #include "Material.h"
 #include "Mesh.h"
 #include "MeshGroup.h"
@@ -12,10 +13,13 @@
 #include "TextureUnit.h"
 #include "VertexElement.h"
 
-ModelConverter::ModelConverter(const char* path)
+ModelConverter::ModelConverter(const char* path, Config config)
 {
-    importer.SetPropertyInteger(AI_CONFIG_PP_SBBC_MAX_BONES, 24);
-    importer.SetPropertyInteger(AI_CONFIG_PP_SLM_VERTEX_LIMIT, 32767);
+    importer.SetPropertyInteger(AI_CONFIG_PP_SBBC_MAX_BONES,
+        (config & CONFIG_FLAG_85_BONE_LIMIT) ? 85 :
+        (config & CONFIG_FLAG_340_BONE_LIMIT) ? 340 : 25);
+
+    importer.SetPropertyInteger(AI_CONFIG_PP_SLM_VERTEX_LIMIT, (config & CONFIG_FLAG_TRIANGLELIST_PRIMITIVE_TOPOLOGY) ? 32768 : 32767);
     importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
 
     aiScene = importer.ReadFile(path,
@@ -46,9 +50,9 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
 
         if (aiFace.mNumIndices == 3)
         {
-            mesh.faceIndices.push_back(static_cast<uint16_t>(aiFace.mIndices[2]));
-            mesh.faceIndices.push_back(static_cast<uint16_t>(aiFace.mIndices[1]));
-            mesh.faceIndices.push_back(static_cast<uint16_t>(aiFace.mIndices[0]));
+            mesh.faceIndices.push_back(aiFace.mIndices[2]);
+            mesh.faceIndices.push_back(aiFace.mIndices[1]);
+            mesh.faceIndices.push_back(aiFace.mIndices[0]);
         }
     }
 
@@ -192,12 +196,15 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
             isolatedBlendWeights.push_back(blendWeights[index]);
         }
 
-        mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), VertexFormat::UBYTE4, VertexType::BlendIndices, 0);
-        mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), VertexFormat::UBYTE4N, VertexType::BlendWeight, 0);
+        mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), 
+            mesh.nodeIndices.size() > 256 ? VertexFormat::USHORT4 : VertexFormat::UBYTE4, VertexType::BlendIndices, 0);
+
+        mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), 
+            VertexFormat::UBYTE4N, VertexType::BlendWeight, 0);
     }
 
     for (size_t i = 0; i < mesh.faceIndices.size(); i++)
-        mesh.faceIndices[i] = static_cast<uint16_t>(i);
+        mesh.faceIndices[i] = static_cast<uint32_t>(i);
 
     auto& material = materials[aiMesh->mMaterialIndex];
 

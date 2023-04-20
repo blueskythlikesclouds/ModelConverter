@@ -6,11 +6,11 @@
 static void writeMeshes(SampleChunkWriter& writer, uint32_t dataVersion, const std::vector<Mesh>& meshes)
 {
     writer.write(static_cast<uint32_t>(meshes.size()));
-    writer.writeOffset(4, [&]
+    writer.writeOffset(4, [&, dataVersion]
     {
        for (const auto& mesh : meshes)
        {
-           writer.writeOffset(4, [&]
+           writer.writeOffset(4, [&, dataVersion]
            {
                mesh.write(writer, dataVersion);
            });

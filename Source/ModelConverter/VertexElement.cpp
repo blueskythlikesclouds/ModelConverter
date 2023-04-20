@@ -154,21 +154,21 @@ void VertexElement::write(SampleChunkWriter& writer, const Vector4& value) const
         break;
 
     case VertexFormat::UDEC3:
-        writer.write(value.u[0] | value.u[1] << 10 | value.u[2] << 20);
+        writer.write((value.u[0] & 0x3FF) | ((value.u[1] & 0x3FF) << 10) | ((value.u[2] & 0x3FF) << 20));
         break;
 
     case VertexFormat::DEC3N:
         writer.write(static_cast<uint32_t>(
-            meshopt_quantizeSnorm(value.f[0], 10) |
-            (meshopt_quantizeSnorm(value.f[1], 10) << 10) |
-            (meshopt_quantizeSnorm(value.f[2], 10) << 20)));
+            (meshopt_quantizeSnorm(value.f[0], 10) & 0x3FF) |
+            ((meshopt_quantizeSnorm(value.f[1], 10) & 0x3FF) << 10) |
+            ((meshopt_quantizeSnorm(value.f[2], 10) & 0x3FF) << 20)));
         break;
 
     case VertexFormat::DEC3N_360:
         writer.write(static_cast<uint32_t>(
-            (meshopt_quantizeSnorm(value.f[0], 9) << 2) |
-            (meshopt_quantizeSnorm(value.f[1], 9) << 13) |
-            (meshopt_quantizeSnorm(value.f[2], 9) << 23)));
+            ((meshopt_quantizeSnorm(value.f[0], 9) & 0x1FF) << 2) |
+            ((meshopt_quantizeSnorm(value.f[1], 9) & 0x1FF) << 13) |
+            ((meshopt_quantizeSnorm(value.f[2], 9) & 0x1FF) << 23)));
         break;
 
     case VertexFormat::FLOAT2_HALF:
