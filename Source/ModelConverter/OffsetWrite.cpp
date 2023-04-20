@@ -2,8 +2,9 @@
 
 #include "SampleChunkWriter.h"
 
-OffsetWrite::OffsetWrite(size_t alignment, std::function<void()>&& function, size_t offsetPosition)
-    : alignment(alignment)
+OffsetWrite::OffsetWrite(size_t priority, size_t alignment, std::function<void()>&& function, size_t offsetPosition)
+    : priority(priority)
+    , alignment(alignment)
     , function(std::move(function))
     , offsetPosition(offsetPosition)
 {

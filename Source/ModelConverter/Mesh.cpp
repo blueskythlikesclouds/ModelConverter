@@ -14,7 +14,7 @@ void Mesh::write(SampleChunkWriter& writer, uint32_t dataVersion) const
     for (const auto& vertexElement : vertexElements)
         vertexSize = std::max(vertexSize, vertexElement.getNextOffset());
 
-    writer.writeOffset(1, [&]
+    writer.writeOffset(1, 1, [&]
     {
         writer.write(materialName);
     });

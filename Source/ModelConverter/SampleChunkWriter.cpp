@@ -28,9 +28,9 @@ void SampleChunkWriter::write(const char* value)
     write(value, strlen(value) + 1);
 }
 
-void SampleChunkWriter::writeOffset(size_t alignment, std::function<void()>&& function)
+void SampleChunkWriter::writeOffset(size_t priority, size_t alignment, std::function<void()>&& function)
 {
-    offsetWrites.emplace_back(alignment, std::move(function), currentOffset);
+    offsetWrites.emplace_back(priority, alignment, std::move(function), currentOffset);
     write<uint32_t>(0);
 }
 
@@ -53,11 +53,43 @@ void SampleChunkWriter::writeNulls(size_t count)
     }
 }
 
+static void writeOffsets(SampleChunkWriter& writer, std::list<OffsetWrite>::iterator first, std::list<OffsetWrite>::iterator last)
+{
+    if (first == last)
+        return;
+
+    --last;
+
+    bool increment;
+    size_t priority = 0;
+
+    do
+    {
+        increment = false;
+
+        for (auto it = first; it != std::next(last); ++it)
+        {
+            if (it->priority == priority)
+            {
+                const auto beforeChild = std::prev(writer.offsetWrites.end());
+
+                writer.offsets.emplace_back(it->offsetPosition, it->write(writer));
+
+                writeOffsets(writer, std::next(beforeChild), writer.offsetWrites.end());
+            }
+            else if (it->priority > priority)
+            {
+                increment = true;
+            }
+        }
+
+        ++priority;
+    } while (increment);
+}
+
 void SampleChunkWriter::flush()
 {
-    for (auto& offsetWrite : offsetWrites)
-        offsets.emplace_back(offsetWrite.offsetPosition, offsetWrite.write(*this));
-
+    writeOffsets(*this, offsetWrites.begin(), offsetWrites.end());
     offsetWrites.clear();
 }
 

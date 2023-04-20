@@ -44,7 +44,7 @@ void Material::write(SampleChunkWriter& writer, uint32_t dataVersion) const
     });
     if (dataVersion >= 3)
     {
-        writer.writeOffset(4, [&]
+        writer.writeOffset(1, 4, [&]
         {
             for (auto& texture : textures)
             {
@@ -54,7 +54,7 @@ void Material::write(SampleChunkWriter& writer, uint32_t dataVersion) const
                 });
             }
         });
-        writer.writeOffset(4, [&]
+        writer.writeOffset(1, 4, [&]
         {
             for (auto& texture : textures)
             {

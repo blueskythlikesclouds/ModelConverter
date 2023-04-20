@@ -27,12 +27,18 @@ struct SampleChunkWriter
     void write(const std::string& value);
     void write(const char* value);
 
-    void writeOffset(size_t alignment, std::function<void()>&& function);
+    void writeOffset(size_t priority, size_t alignment, std::function<void()>&& function);
+
+    template<typename T>
+    void writeOffset(size_t priority, size_t alignment, const T& function)
+    {
+        writeOffset(priority, alignment, std::function<void()>(function));
+    }
 
     template<typename T>
     void writeOffset(size_t alignment, const T& function)
     {
-        writeOffset(alignment, std::function<void()>(function));
+        writeOffset(0, alignment, function);
     }
 
     void align(size_t alignment);
