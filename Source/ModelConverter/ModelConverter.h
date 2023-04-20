@@ -11,6 +11,8 @@ struct ModelConverter
     const aiScene* aiScene;
 
     ModelHolder& holder;
+
+    std::unordered_map<std::string_view, size_t> meshGroupIndices;
     std::unordered_map<std::string_view, size_t> nodeIndices;
 
     ModelConverter(ModelHolder& holder);

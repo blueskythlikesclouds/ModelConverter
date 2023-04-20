@@ -376,7 +376,7 @@ void ModelConverter::convertMaterial(const aiMaterial* aiMaterial)
         }
     }
 
-    range = tags.indices.equal_range("PROP");
+    range = tags.indices.equal_range("PRP");
 
     for (auto it = range.first; it != range.second; ++it)
     {
@@ -428,7 +428,26 @@ void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatr
 
     if (aiNode->mNumMeshes != 0)
     {
-        MeshGroup& group = holder.model.meshGroups.emplace_back();
+        const Tags tags(aiNode->mName.C_Str());
+        const auto name = tags.getValue("NAME", 0, std::string_view());
+
+        size_t index;
+
+        if (const auto pair = meshGroupIndices.find(name); pair != meshGroupIndices.end())
+        {
+            index = pair->second;
+        }
+        else
+        {
+            index = holder.model.meshGroups.size();
+
+            auto& group = holder.model.meshGroups.emplace_back();
+            group.name = name;
+
+            meshGroupIndices.emplace(name, index);
+        }
+
+        MeshGroup& group = holder.model.meshGroups[index];
 
         for (size_t i = 0; i < aiNode->mNumMeshes; i++)
         {
@@ -456,10 +475,7 @@ void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatr
             }
         }
 
-        const Tags tags(aiNode->mName.C_Str());
-        group.name = tags.getValue("NAME", 0, tags.name);
-
-        auto range = tags.indices.equal_range("PROP");
+        auto range = tags.indices.equal_range("PRP");
         for (auto it = range.first; it != range.second; ++it)
         {
             const Tag& tag = tags[it->second];
