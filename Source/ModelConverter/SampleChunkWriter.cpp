@@ -115,6 +115,7 @@ SampleChunkWriter SampleChunkWriter::write(uint32_t dataVersion, std::function<v
 
     writer.currentOffset = relocationOffset;
 
+    std::ranges::sort(writer.offsets);
     writer.write(static_cast<uint32_t>(writer.offsets.size()));
 
     for (const auto& [offsetPosition, offset] : writer.offsets)
@@ -157,6 +158,7 @@ SampleChunkWriter SampleChunkWriter::write(const SampleChunkNode& node)
 
     writer.currentOffset = relocationOffset;
 
+    std::ranges::sort(writer.offsets);
     for (const auto& [offsetPosition, offset] : writer.offsets)
         writer.write(static_cast<uint32_t>(offsetPosition - dataOffset));
 
