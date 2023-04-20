@@ -25,9 +25,9 @@ void Texture::write(SampleChunkWriter& writer) const
     });
 }
 
-void Texture::save(const char* path) const
+bool Texture::save(const char* path) const
 {
-    SampleChunkWriter::write(1, [&](SampleChunkWriter& writer)
+    return SampleChunkWriter::write(1, [&](SampleChunkWriter& writer)
     {
         write(writer);
     }).save(path);

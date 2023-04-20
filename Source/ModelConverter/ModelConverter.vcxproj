@@ -275,6 +275,7 @@
     <ClInclude Include="MeshGroup.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelConverter.h" />
+    <ClInclude Include="ModelHolder.h" />
     <ClInclude Include="ModelOptimizer.h" />
     <ClInclude Include="Node.h" />
     <ClInclude Include="OffsetWrite.h" />

@@ -174,9 +174,14 @@ SampleChunkWriter SampleChunkWriter::write(const SampleChunkNode& node)
     return writer;
 }
 
-void SampleChunkWriter::save(const char* path) const
+bool SampleChunkWriter::save(const char* path) const
 {
     FILE* file = fopen(path, "wb");
-    fwrite(data.data(), 1, data.size(), file);
-    fclose(file);
+    if (file)
+    {
+        fwrite(data.data(), 1, data.size(), file);
+        fclose(file);
+        return true;
+    }
+    return false;
 }   

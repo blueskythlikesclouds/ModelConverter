@@ -1,9 +1,9 @@
 ﻿#include "ModelConverter.h"
 
 #include "Config.h"
-#include "Material.h"
 #include "Mesh.h"
 #include "MeshGroup.h"
+#include "ModelHolder.h"
 #include "ModelOptimizer.h"
 #include "Node.h"
 #include "Parameter.h"
@@ -13,26 +13,48 @@
 #include "TextureUnit.h"
 #include "VertexElement.h"
 
-ModelConverter::ModelConverter(const char* path, Config config)
+ModelConverter::ModelConverter(ModelHolder& holder)
+    : aiScene()
+    , holder(holder)
 {
-    importer.SetPropertyInteger(AI_CONFIG_PP_SBBC_MAX_BONES,
+}
+
+ModelConverter::~ModelConverter() = default;
+
+bool ModelConverter::convert(const char* path, Config config, ModelHolder& holder)
+{
+    ModelConverter converter(holder);
+
+    converter.importer.SetPropertyInteger(AI_CONFIG_PP_SBBC_MAX_BONES,
         (config & CONFIG_FLAG_85_BONE_LIMIT) ? 85 :
         (config & CONFIG_FLAG_340_BONE_LIMIT) ? 340 : 25);
 
-    importer.SetPropertyInteger(AI_CONFIG_PP_SLM_VERTEX_LIMIT, (config & CONFIG_FLAG_TRIANGLELIST_PRIMITIVE_TOPOLOGY) ? 32768 : 32767);
-    importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
+    converter.importer.SetPropertyInteger(AI_CONFIG_PP_SLM_VERTEX_LIMIT, (config & CONFIG_FLAG_TRIANGLELIST_PRIMITIVE_TOPOLOGY) ? 32768 : 32767);
+    converter.importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
 
-    aiScene = importer.ReadFile(path,
+    converter.aiScene = converter.importer.ReadFile(path,
         aiProcess_JoinIdenticalVertices |
         aiProcess_Triangulate |
         aiProcess_SplitLargeMeshes |
         aiProcess_LimitBoneWeights |
         aiProcess_SortByPType |
-        aiProcess_SplitByBoneCount | 
+        aiProcess_SplitByBoneCount |
         aiProcess_FlipUVs);
-}
 
-ModelConverter::~ModelConverter() = default;
+    if (converter.aiScene)
+    {
+        converter.convertMaterials();
+        converter.convertNodes();
+        converter.convertMeshes();
+
+        TangentGenerator::generate(holder.model);
+        ModelOptimizer::optimize(holder.model, config);
+
+        return true;
+    }
+
+    return false;
+}
 
 Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix)
 {
@@ -66,8 +88,8 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
 
         for (uint32_t j = 0; j < 3; j++)
         {
-            model.min[j] = std::min(model.min[j], position[j]);
-            model.max[j] = std::max(model.max[j], position[j]);
+            holder.model.min[j] = std::min(holder.model.min[j], position[j]);
+            holder.model.max[j] = std::max(holder.model.max[j], position[j]);
         }
     }
 
@@ -197,7 +219,7 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
         }
 
         mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), 
-            model.nodes.size() > 256 ? VertexFormat::USHORT4 : VertexFormat::UBYTE4, VertexType::BlendIndices, 0);
+            holder.model.nodes.size() > 256 ? VertexFormat::USHORT4 : VertexFormat::UBYTE4, VertexType::BlendIndices, 0);
 
         mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), 
             VertexFormat::UBYTE4N, VertexType::BlendWeight, 0);
@@ -206,7 +228,7 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
     for (size_t i = 0; i < mesh.faceIndices.size(); i++)
         mesh.faceIndices[i] = static_cast<uint32_t>(i);
 
-    auto& material = materials[aiMesh->mMaterialIndex];
+    auto& material = holder.materials[aiMesh->mMaterialIndex];
 
     for (const auto& texture : material.textures)
         mesh.textureUnits.emplace_back(texture.type, static_cast<uint8_t>(mesh.textureUnits.size()));
@@ -219,7 +241,7 @@ void ModelConverter::convertMaterial(const aiMaterial* aiMaterial)
     const aiString str = aiMaterial->GetName();
     const Tags tags(str.C_Str());
 
-    auto& material = materials.emplace_back();
+    auto& material = holder.materials.emplace_back();
 
     material.name = tags.name;
     material.shader = tags.getValue("SHDR", 0, "Common_d");
@@ -378,9 +400,9 @@ void ModelConverter::convertNodesRecursively(const aiNode* aiNode, size_t parent
 
     if (aiNode != aiScene->mRootNode && aiNode->mNumMeshes == 0)
     {
-        const size_t nodeIndex = model.nodes.size();
+        const size_t nodeIndex = holder.model.nodes.size();
 
-        auto& node = model.nodes.emplace_back();
+        auto& node = holder.model.nodes.emplace_back();
         node.parentIndex = static_cast<uint32_t>(parentIndex);
         node.name = aiNode->mName.C_Str();
         memcpy(&node.matrix, &aiMatrix4x4(matrix).Inverse(), sizeof(matrix));
@@ -396,7 +418,7 @@ void ModelConverter::convertNodes()
 {
     convertNodesRecursively(aiScene->mRootNode, ~0, aiMatrix4x4());
 
-    for (const auto& node : model.nodes)
+    for (const auto& node : holder.model.nodes)
         nodeIndices.emplace(node.name, nodeIndices.size());
 }
 
@@ -406,7 +428,7 @@ void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatr
 
     if (aiNode->mNumMeshes != 0)
     {
-        MeshGroup& group = model.meshGroups.emplace_back();
+        MeshGroup& group = holder.model.meshGroups.emplace_back();
 
         for (size_t i = 0; i < aiNode->mNumMeshes; i++)
         {
@@ -418,7 +440,7 @@ void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatr
 
             if (!mesh.faceIndices.empty() && !mesh.vertexStreams[0].empty() && !mesh.vertexStreams[0][0].empty())
             {
-                auto& material = materials[aiMesh->mMaterialIndex];
+                auto& material = holder.materials[aiMesh->mMaterialIndex];
 
                 if (material.layer == "solid")
                     group.opaqueMeshes.push_back(std::move(mesh));
@@ -444,7 +466,7 @@ void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatr
             const auto name = tag.getValue(0, std::string_view());
 
             if (!name.empty())
-                model.scaParameters.emplace(name, tag.getIntValue(1, NULL));
+                holder.model.scaParameters.emplace(name, tag.getIntValue(1, NULL));
         }
     }
 
@@ -455,15 +477,4 @@ void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatr
 void ModelConverter::convertMeshes()
 {
     convertMeshesRecursively(aiScene->mRootNode, aiMatrix4x4());
-}
-
-void ModelConverter::convert(Config config)
-{
-    convertMaterials();
-    convertNodes();
-    convertMeshes();
-
-    TangentGenerator::generate(model);
-
-    ModelOptimizer::optimize(model, config);
 }

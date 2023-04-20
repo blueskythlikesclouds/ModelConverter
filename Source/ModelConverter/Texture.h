@@ -23,5 +23,5 @@ struct Texture
     Texture();
 
     void write(SampleChunkWriter& writer) const;
-    void save(const char* path) const;
+    bool save(const char* path) const;
 };

@@ -91,14 +91,17 @@ void Material::write(SampleChunkWriter& writer, uint32_t dataVersion) const
     writeParameters(writer, boolParameters);
 }
 
-void Material::save(const char* path, Config config) const
+bool Material::save(const char* path, Config config) const
 {
     if (config & CONFIG_FLAG_V1_MATERIAL)
     {
-        SampleChunkWriter::write(1, [&](SampleChunkWriter& writer)
+        bool result = SampleChunkWriter::write(1, [&](SampleChunkWriter& writer)
         {
             write(writer, 1);
         }).save(path);
+
+        if (!result)
+            return false;
 
         std::string dir = path;
         dir.erase(dir.find_last_of("\\/") + 1);
@@ -107,7 +110,7 @@ void Material::save(const char* path, Config config) const
         texset += name;
         texset += ".texset";
 
-        SampleChunkWriter::write(0, [&](SampleChunkWriter& writer)
+        result = SampleChunkWriter::write(0, [&](SampleChunkWriter& writer)
         {
             writer.write(static_cast<uint32_t>(textures.size()));
             writer.writeOffset(4, [&]
@@ -122,14 +125,20 @@ void Material::save(const char* path, Config config) const
             });
         }).save(texset.c_str());
 
+        if (!result)
+            return false;
+
         for (const auto& texture : textures)
         {
             std::string tex = dir;
             tex += texture.name;
             tex += ".texture";
 
-            texture.save(tex.c_str());
+            if (!texture.save(tex.c_str()))
+                return false;
         }
+
+        return true;
     }
     else
     {
@@ -150,11 +159,11 @@ void Material::save(const char* path, Config config) const
                 write(writer, 3);
             });
 
-            SampleChunkWriter::write(material).save(path);
+            return SampleChunkWriter::write(material).save(path);
         }
         else
         {
-            SampleChunkWriter::write(3, [&](SampleChunkWriter& writer)
+            return SampleChunkWriter::write(3, [&](SampleChunkWriter& writer)
             {
                 write(writer, 3);
             }).save(path);

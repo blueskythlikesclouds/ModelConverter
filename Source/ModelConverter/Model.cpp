@@ -61,7 +61,7 @@ void Model::write(SampleChunkWriter& writer, uint32_t dataVersion) const
     });
 }
 
-void Model::save(const char* path, Config config) const
+bool Model::save(const char* path, Config config) const
 {
     const uint32_t dataVersion = nodes.size() > 256 ? 6 : 5;
 
@@ -95,11 +95,11 @@ void Model::save(const char* path, Config config) const
             write(writer, dataVersion);
         });
 
-        SampleChunkWriter::write(model).save(path);
+        return SampleChunkWriter::write(model).save(path);
     }
     else
     {
-        SampleChunkWriter::write(dataVersion, [&, dataVersion](SampleChunkWriter& writer)
+        return SampleChunkWriter::write(dataVersion, [&, dataVersion](SampleChunkWriter& writer)
         {
             write(writer, dataVersion);
         }).save(path);

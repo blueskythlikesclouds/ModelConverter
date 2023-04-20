@@ -27,5 +27,5 @@ struct Material
     ~Material();
 
     void write(SampleChunkWriter& writer, uint32_t dataVersion) const;
-    void save(const char* path, Config config) const;
+    bool save(const char* path, Config config) const;
 };

@@ -49,5 +49,5 @@ struct SampleChunkWriter
     static SampleChunkWriter write(uint32_t dataVersion, std::function<void(SampleChunkWriter&)> function);
     static SampleChunkWriter write(const SampleChunkNode& node);
 
-    void save(const char* path) const;
+    bool save(const char* path) const;
 };

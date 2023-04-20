@@ -1,10 +1,8 @@
 ﻿#pragma once
 
-#include "Model.h"
-
 enum Config;
 
-struct Material;
+struct ModelHolder;
 struct Mesh;
 
 struct ModelConverter
@@ -12,12 +10,13 @@ struct ModelConverter
     Assimp::Importer importer;
     const aiScene* aiScene;
 
-    Model model;
-    std::vector<Material> materials;
+    ModelHolder& holder;
     std::unordered_map<std::string_view, size_t> nodeIndices;
 
-    ModelConverter(const char* path, Config config);
+    ModelConverter(ModelHolder& holder);
     ~ModelConverter();
+
+    static bool convert(const char* path, Config config, ModelHolder& holder);
 
     Mesh convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix);
 
@@ -29,6 +28,4 @@ struct ModelConverter
 
     void convertMeshesRecursively(const aiNode* aiNode, const aiMatrix4x4& parentMatrix);
     void convertMeshes();
-
-    void convert(Config config);
 };
