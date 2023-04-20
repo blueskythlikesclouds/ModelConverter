@@ -16,7 +16,7 @@ int main(int argc, const char* argv[])
 {
     std::string src;
     std::string dst;
-    Config config = CONFIG_FLAG_NONE;
+    Config config = CONFIG_GENERATIONS;
     bool overwriteMaterials = false;
     bool noPause = false;
 
@@ -123,17 +123,17 @@ Examples:
     for (auto& material : holder.materials)
     {
         std::string path = dir + material.name + ".material";
-        if (overwriteMaterials || !std::filesystem::exists(path))
+        if (!overwriteMaterials && std::filesystem::exists(path))
+            continue;
+
+        if (!material.save(path.c_str(), config))
         {
-            if (!material.save(path.c_str(), config))
-            {
-                printf("ERROR: Failed to save %s\n", path.c_str());
+            printf("ERROR: Failed to save %s\n", path.c_str());
 
-                if (!noPause) 
-                    getchar();
+            if (!noPause) 
+                getchar();
 
-                return -1;
-            }
+            return -1;
         }
     }
 

@@ -58,7 +58,7 @@ static void getTexCoord(const SMikkTSpaceContext* pContext, float fvTexcOut[], c
         static_cast<TangentGenerator::Context*>(pContext->m_pUserData)->get(VertexType::TexCoord, iFace * 3 + iVert);
 
     fvTexcOut[0] = texCoord.fx;
-    fvTexcOut[1] = texCoord.fy;
+    fvTexcOut[1] = 1.0f - texCoord.fy;
 }
 
 static void setTSpace(const SMikkTSpaceContext* pContext, const float fvTangent[], const float fvBiTangent[], const float fMagS, const float fMagT,
