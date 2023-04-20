@@ -64,7 +64,7 @@ static void optimizeMesh(Mesh& mesh, Config config)
     {
         std::vector<uint32_t> indices;
         indices.resize(meshopt_stripifyBound(mesh.faceIndices.size()));
-        indices.resize(meshopt_stripify(indices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), vertexCount, static_cast<uint16_t>(-1)));
+        indices.resize(meshopt_stripify(indices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), vertexCount, static_cast<uint32_t>(-1)));
         std::swap(mesh.faceIndices, indices);
     }
 
