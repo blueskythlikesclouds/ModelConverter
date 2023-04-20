@@ -63,7 +63,7 @@ void Model::write(SampleChunkWriter& writer, uint32_t dataVersion) const
 
 bool Model::save(const char* path, Config config) const
 {
-    const uint32_t dataVersion = nodes.size() > 256 ? 6 : 5;
+    const uint32_t dataVersion = nodes.size() > 255 ? 6 : 5;
 
     if (config & CONFIG_FLAG_V2_SAMPLE_CHUNK)
     {
@@ -84,7 +84,7 @@ bool Model::save(const char* path, Config config) const
             }
         }
 
-        if (config & CONFIG_FLAG_TRIANGLELIST_PRIMITIVE_TOPOLOGY)
+        if (config & CONFIG_FLAG_TRIANGLE_LIST)
         {
             model.children.emplace_back("Topology", 3);
             model.children.emplace_back("UserAABB", false);

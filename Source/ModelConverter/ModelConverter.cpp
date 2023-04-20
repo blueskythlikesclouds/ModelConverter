@@ -25,21 +25,24 @@ bool ModelConverter::convert(const char* path, Config config, ModelHolder& holde
 {
     ModelConverter converter(holder);
 
-    converter.importer.SetPropertyInteger(AI_CONFIG_PP_SBBC_MAX_BONES,
-        (config & CONFIG_FLAG_85_BONE_LIMIT) ? 85 :
-        (config & CONFIG_FLAG_340_BONE_LIMIT) ? 340 : 25);
-
-    converter.importer.SetPropertyInteger(AI_CONFIG_PP_SLM_VERTEX_LIMIT, (config & CONFIG_FLAG_TRIANGLELIST_PRIMITIVE_TOPOLOGY) ? 32768 : 32767);
-    converter.importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
-
-    converter.aiScene = converter.importer.ReadFile(path,
+    uint32_t flags = 
         aiProcess_JoinIdenticalVertices |
         aiProcess_Triangulate |
         aiProcess_SplitLargeMeshes |
         aiProcess_LimitBoneWeights |
         aiProcess_SortByPType |
-        aiProcess_SplitByBoneCount |
-        aiProcess_FlipUVs);
+        aiProcess_FlipUVs;
+
+    if ((config & CONFIG_FLAG_NO_NODE_LIMIT) == 0)
+    {
+        flags |= aiProcess_SplitByBoneCount;
+        converter.importer.SetPropertyInteger(AI_CONFIG_PP_SBBC_MAX_BONES, 25);
+    }
+
+    converter.importer.SetPropertyInteger(AI_CONFIG_PP_SLM_VERTEX_LIMIT, (config & CONFIG_FLAG_TRIANGLE_LIST) ? 32768 : 32767);
+    converter.importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
+
+    converter.aiScene = converter.importer.ReadFile(path, flags);
 
     if (converter.aiScene)
     {
@@ -160,7 +163,7 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
             colors.resize(mesh.faceIndices.size(), Vector4(1.0f, 1.0f, 1.0f, 1.0f));
         }
 
-        mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), VertexFormat::FLOAT4, VertexType::Color, i);
+        mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), VertexFormat::UBYTE4N, VertexType::Color, i);
     }
 
     if (aiMesh->HasBones())
@@ -219,7 +222,7 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
         }
 
         mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), 
-            holder.model.nodes.size() > 256 ? VertexFormat::USHORT4 : VertexFormat::UBYTE4, VertexType::BlendIndices, 0);
+            holder.model.nodes.size() > 255 ? VertexFormat::USHORT4 : VertexFormat::UBYTE4, VertexType::BlendIndices, 0);
 
         mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), 
             VertexFormat::UBYTE4N, VertexType::BlendWeight, 0);

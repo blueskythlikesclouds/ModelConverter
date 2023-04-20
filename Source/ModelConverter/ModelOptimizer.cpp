@@ -38,7 +38,7 @@ static void optimizeMesh(Mesh& mesh, Config config)
 
     meshopt_remapIndexBuffer(mesh.faceIndices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), remap.data());
 
-    if (config & CONFIG_FLAG_TRIANGLELIST_PRIMITIVE_TOPOLOGY)
+    if (config & CONFIG_FLAG_TRIANGLE_LIST)
         meshopt_optimizeVertexCache(mesh.faceIndices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), vertexCount);
     else
         meshopt_optimizeVertexCacheStrip(mesh.faceIndices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), vertexCount);
@@ -60,7 +60,7 @@ static void optimizeMesh(Mesh& mesh, Config config)
 
     meshopt_remapIndexBuffer(mesh.faceIndices.data(), mesh.faceIndices.data(), mesh.faceIndices.size(), remap.data());
 
-    if ((config & CONFIG_FLAG_TRIANGLELIST_PRIMITIVE_TOPOLOGY) == 0)
+    if ((config & CONFIG_FLAG_TRIANGLE_LIST) == 0)
     {
         std::vector<uint32_t> indices;
         indices.resize(meshopt_stripifyBound(mesh.faceIndices.size()));
@@ -77,11 +77,11 @@ static void optimizeMesh(Mesh& mesh, Config config)
             case VertexType::Normal:
             case VertexType::Tangent:
             case VertexType::Binormal:
-                vertexElement.format = (config & CONFIG_FLAG_D3D11_VERTEX_FORMAT) ? VertexFormat::DEC3N : VertexFormat::DEC3N_360;
+                vertexElement.format = (config & CONFIG_FLAG_D3D11_VERTEX_FORMAT) ? VertexFormat::DEC3N : VertexFormat::HEND3N;
                 break;
 
             case VertexType::TexCoord:
-                vertexElement.format = VertexFormat::FLOAT2_HALF;
+                vertexElement.format = VertexFormat::FLOAT16_2;
                 break;
 
             case VertexType::Color:
