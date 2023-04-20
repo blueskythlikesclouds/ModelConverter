@@ -197,7 +197,7 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
         }
 
         mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), 
-            mesh.nodeIndices.size() > 256 ? VertexFormat::USHORT4 : VertexFormat::UBYTE4, VertexType::BlendIndices, 0);
+            model.nodes.size() > 256 ? VertexFormat::USHORT4 : VertexFormat::UBYTE4, VertexType::BlendIndices, 0);
 
         mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), 
             VertexFormat::UBYTE4N, VertexType::BlendWeight, 0);
