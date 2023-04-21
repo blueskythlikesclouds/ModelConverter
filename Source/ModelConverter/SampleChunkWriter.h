@@ -20,8 +20,8 @@ struct SampleChunkWriter
     template<typename T>
     void write(const T& value)
     {
-        const T bigEndianValue = endianSwap(value);
-        write(&bigEndianValue, sizeof(T));
+        const auto bigEndianValue = endianSwap(value);
+        write(&bigEndianValue, sizeof(bigEndianValue));
     }
 
     void write(const std::string& value);

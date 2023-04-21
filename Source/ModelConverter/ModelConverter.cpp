@@ -25,12 +25,7 @@ bool ModelConverter::convert(const char* path, Config config, ModelHolder& holde
     ModelConverter converter(holder);
 
     converter.importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
-
-    converter.aiScene = converter.importer.ReadFile(path, 
-        aiProcess_Triangulate |
-        aiProcess_LimitBoneWeights |
-        aiProcess_SortByPType |
-        aiProcess_FlipUVs);
+    converter.aiScene = converter.importer.ReadFile(path, aiProcess_Triangulate | aiProcess_SortByPType | aiProcess_FlipUVs);
 
     if (converter.aiScene)
     {
@@ -160,9 +155,9 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
         blendIndices.resize(aiMesh->mNumVertices, Vector4(-1, -1, -1, -1));
         blendWeights.resize(aiMesh->mNumVertices, Vector4(0.0f, 0.0f, 0.0f, 0.0f));
 
-        for (size_t i = 0; i < aiMesh->mNumBones; i++)
+        for (size_t boneIndex = 0; boneIndex < aiMesh->mNumBones; boneIndex++)
         {
-            const aiBone* aiBone = aiMesh->mBones[i];
+            const aiBone* aiBone = aiMesh->mBones[boneIndex];
             const auto modelNodeIndex = nodeIndices.find(aiBone->mName.C_Str());
 
             if (modelNodeIndex == nodeIndices.end())
@@ -171,29 +166,58 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
             const size_t meshNodeIndex = mesh.nodeIndices.size();
             mesh.nodeIndices.push_back(static_cast<uint16_t>(modelNodeIndex->second));
 
-            for (size_t j = 0; j < aiBone->mNumWeights; j++)
+            for (size_t weightIndex = 0; weightIndex < aiBone->mNumWeights; weightIndex++)
             {
-                const aiVertexWeight& aiWeight = aiBone->mWeights[j];
+                const aiVertexWeight& aiWeight = aiBone->mWeights[weightIndex];
 
-                int32_t index = -1;
                 auto& blendIndex = blendIndices[aiWeight.mVertexId];
+                auto& blendWeight = blendWeights[aiWeight.mVertexId];
 
-                for (int32_t k = 0; k < 4; k++)
+                for (int32_t i = 0; i < 4; i++)
                 {
-                    if (blendIndex.i[k] == -1)
+                    if (aiWeight.mWeight > blendWeight.f[i])
                     {
-                        index = k;
+                        for (int32_t j = 3; j > i; j--)
+                        {
+                            blendIndex.u[j] = blendIndex.u[j - 1];
+                            blendWeight.f[j] = blendWeight.f[j - 1];
+                        }
+
+                        blendIndex.u[i] = static_cast<uint32_t>(meshNodeIndex);
+                        blendWeight.f[i] = aiWeight.mWeight;
+
                         break;
                     }
                 }
-
-                if (index >= 0)
-                {
-                    blendIndex.u[index] = static_cast<uint32_t>(meshNodeIndex);
-                    auto& blendWeight = blendWeights[aiWeight.mVertexId];
-                    blendWeight.f[index] = aiWeight.mWeight;
-                }
             }
+        }
+
+        for (size_t i = 0; i < aiMesh->mNumVertices; i++)
+        {
+            auto& blendIndex = blendIndices[i];
+            auto& blendWeight = blendWeights[i];
+
+            float totalWeight = blendWeight.fx + blendWeight.fy + blendWeight.fz + blendWeight.fw;
+
+            if (totalWeight > 0.0f)
+            {
+                totalWeight = 1.0f / totalWeight;
+
+                blendWeight.fx *= totalWeight;
+                blendWeight.fy *= totalWeight;
+                blendWeight.fz *= totalWeight;
+                blendWeight.fw *= totalWeight;
+            }
+            else
+            {
+                blendIndex.i[0] = 0;
+                blendIndex.i[1] = -1;
+                blendIndex.i[2] = -1;
+                blendIndex.i[3] = -1;
+            }
+
+            blendIndex.reverse();
+            blendWeight.reverse();
         }
 
         auto& isolatedBlendIndices = mesh.vertexStreams[static_cast<size_t>(VertexType::BlendIndices)].emplace_back();

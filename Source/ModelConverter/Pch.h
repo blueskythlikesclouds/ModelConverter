@@ -26,8 +26,13 @@
 
 using Float3 = std::array<float, 3>;
 using Float4 = std::array<float, 4>;
+using Float4x4 = std::array<float, 16>;
+
 using Int4 = std::array<int32_t, 4>;
+
+using UInt3 = std::array<uint32_t, 3>;
 using UInt4 = std::array<uint32_t, 4>;
+using UInt4x4 = std::array<uint32_t, 16>;
 
 struct Vector4
 {
@@ -126,6 +131,11 @@ struct Vector4
         : ux(x), uy(y), uz(z), uw(w)
     {
     }
-};
 
-using Float4x4 = std::array<float, 16>;
+    Vector4& reverse()
+    {
+        std::swap(u[0], u[3]);
+        std::swap(u[1], u[2]);
+        return *this;
+    }
+};

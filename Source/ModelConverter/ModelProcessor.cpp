@@ -70,9 +70,9 @@ static void splitModel(Model& model, Config config)
     traverseModel(model, [config](Mesh& mesh, auto& group)
     {
         const size_t maxVertices = (config & CONFIG_FLAG_TRIANGLE_LIST) ? 65536 : 65535;
-        constexpr size_t maxNodes = 25;
+        constexpr size_t MAX_NODES = 25;
 
-        if (mesh.vertexStreams[0][0].size() <= maxVertices && ((config & CONFIG_FLAG_NODE_LIMIT) == 0 || mesh.nodeIndices.size() <= maxNodes))
+        if (mesh.vertexStreams[0][0].size() <= maxVertices && ((config & CONFIG_FLAG_NODE_LIMIT) == 0 || mesh.nodeIndices.size() <= MAX_NODES))
             return;
 
         std::unordered_set<uint32_t> vertices;
@@ -97,7 +97,7 @@ static void splitModel(Model& model, Config config)
                 }
             }
 
-            if (vertices.size() > maxVertices || ((config & CONFIG_FLAG_NODE_LIMIT) != 0 && nodes.size() > maxNodes))
+            if (vertices.size() > maxVertices || ((config & CONFIG_FLAG_NODE_LIMIT) != 0 && nodes.size() > MAX_NODES))
             {
                 Mesh copy(mesh);
 

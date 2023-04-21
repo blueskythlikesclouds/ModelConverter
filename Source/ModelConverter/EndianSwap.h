@@ -6,38 +6,38 @@ static T endianSwap(const T& value)
     return value;
 }
 
-template<>
 static int16_t endianSwap(const int16_t& value)
 {
     return static_cast<int16_t>(_byteswap_ushort(static_cast<uint16_t>(value)));
 }
 
-template<>
 static uint16_t endianSwap(const uint16_t& value)
 {
     return _byteswap_ushort(value);
 }
 
-template<>
 static int32_t endianSwap(const int32_t& value)
 {
     return static_cast<int32_t>(_byteswap_ulong(static_cast<uint32_t>(value)));
 }
 
-template<>
 static uint32_t endianSwap(const uint32_t& value)
 {
     return _byteswap_ulong(value);
 }
 
-template<>
-static float endianSwap(const float& value)
+static uint32_t endianSwap(const float& value)
 {
-    const uint32_t bigEndianValue = _byteswap_ulong(*(uint32_t*)&value);
-    return *(float*)&bigEndianValue;
+    union
+    {
+        float f;
+        uint32_t i;
+    } u;
+
+    u.f = value;
+    return _byteswap_ulong(u.i);
 }
 
-template<>
 static Int4 endianSwap(const Int4& value)
 {
     return
@@ -49,8 +49,7 @@ static Int4 endianSwap(const Int4& value)
     };
 }
 
-template<>
-static Float3 endianSwap(const Float3& value)
+static UInt3 endianSwap(const Float3& value)
 {
     return
     {
@@ -60,8 +59,7 @@ static Float3 endianSwap(const Float3& value)
     };
 }
 
-template<>
-static Float4 endianSwap(const Float4& value)
+static UInt4 endianSwap(const Float4& value)
 {
     return
     {
@@ -72,8 +70,7 @@ static Float4 endianSwap(const Float4& value)
     };
 }
 
-template<>
-static Float4x4 endianSwap(const Float4x4& value)
+static UInt4x4 endianSwap(const Float4x4& value)
 {
     return
     {
