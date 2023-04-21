@@ -7,6 +7,8 @@ SampleChunkWriter::SampleChunkWriter()
 {
 }
 
+SampleChunkWriter::SampleChunkWriter(const SampleChunkWriter&) = default;
+SampleChunkWriter::SampleChunkWriter(SampleChunkWriter&&) noexcept = default;
 SampleChunkWriter::~SampleChunkWriter() = default;
 
 void SampleChunkWriter::write(const void* value, size_t size)

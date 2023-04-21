@@ -13,6 +13,8 @@ struct SampleChunkWriter
     std::vector<std::pair<size_t, size_t>> offsets;
 
     SampleChunkWriter();
+    SampleChunkWriter(const SampleChunkWriter&);
+    SampleChunkWriter(SampleChunkWriter&&) noexcept;
     ~SampleChunkWriter();
 
     void write(const void* value, size_t size);

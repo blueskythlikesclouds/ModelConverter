@@ -15,6 +15,8 @@ struct Model
     std::unordered_map<std::string, int> scaParameters;
 
     Model();
+    Model(const Model&);
+    Model(Model&&) noexcept;
     ~Model();
 
     void write(SampleChunkWriter& writer, uint32_t dataVersion) const;

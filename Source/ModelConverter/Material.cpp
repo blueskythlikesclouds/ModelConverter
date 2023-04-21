@@ -15,6 +15,8 @@ Material::Material()
 {
 }
 
+Material::Material(const Material&) = default;
+Material::Material(Material&&) noexcept = default;
 Material::~Material() = default;
 
 template<typename T>

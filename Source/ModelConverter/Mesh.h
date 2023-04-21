@@ -14,6 +14,8 @@ struct Mesh
     std::vector<TextureUnit> textureUnits;
 
     Mesh();
+    Mesh(const Mesh&);
+    Mesh(Mesh&&) noexcept;
     ~Mesh();
 
     void write(SampleChunkWriter& writer, uint32_t dataVersion) const;

@@ -19,6 +19,8 @@ static void writeMeshes(SampleChunkWriter& writer, uint32_t dataVersion, const s
 }
 
 MeshGroup::MeshGroup() = default;
+MeshGroup::MeshGroup(const MeshGroup&) = default;
+MeshGroup::MeshGroup(MeshGroup&&) noexcept = default;
 MeshGroup::~MeshGroup() = default;
 
 void MeshGroup::write(SampleChunkWriter& writer, uint32_t dataVersion) const

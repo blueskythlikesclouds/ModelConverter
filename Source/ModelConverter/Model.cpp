@@ -12,6 +12,9 @@ Model::Model()
 {
     
 }
+
+Model::Model(const Model&) = default;
+Model::Model(Model&&) noexcept = default;
 Model::~Model() = default;
 
 void Model::write(SampleChunkWriter& writer, uint32_t dataVersion) const

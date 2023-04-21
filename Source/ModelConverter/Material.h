@@ -24,6 +24,8 @@ struct Material
     std::unordered_map<std::string, int> scaParameters;
 
     Material();
+    Material(const Material&);
+    Material(Material&&) noexcept;
     ~Material();
 
     void write(SampleChunkWriter& writer, uint32_t dataVersion) const;

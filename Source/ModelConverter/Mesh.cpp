@@ -5,6 +5,8 @@
 #include "VertexElement.h"
 
 Mesh::Mesh() = default;
+Mesh::Mesh(const Mesh&) = default;
+Mesh::Mesh(Mesh&&) noexcept = default;
 Mesh::~Mesh() = default;
 
 void Mesh::write(SampleChunkWriter& writer, uint32_t dataVersion) const

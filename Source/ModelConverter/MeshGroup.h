@@ -13,6 +13,8 @@ struct MeshGroup
     std::string name;
 
     MeshGroup();
+    MeshGroup(const MeshGroup&);
+    MeshGroup(MeshGroup&&) noexcept;
     ~MeshGroup();
 
     void write(SampleChunkWriter& writer, uint32_t dataVersion) const;
