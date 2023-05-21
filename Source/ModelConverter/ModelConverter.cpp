@@ -29,7 +29,11 @@ bool ModelConverter::convert(const char* path, Config config, ModelHolder& holde
 
     if (converter.aiScene)
     {
-        converter.convertMaterials();
+        if ((config & CONFIG_FLAG_V2_SAMPLE_CHUNK) && (config & CONFIG_FLAG_D3D11_VERTEX_FORMAT))
+        {
+            holder.model.scaParameters.emplace("ShadowCa", true);
+            holder.model.scaParameters.emplace("ShadowRe", true);
+        }
 
         converter.convertMaterials(config);
         converter.convertNodes();
