@@ -404,7 +404,7 @@ void ModelConverter::convertMaterial(const aiMaterial* aiMaterial, Config config
         const auto name = tag.getValue(0, std::string_view());
 
         if (!name.empty())
-            material.scaParameters.emplace(name, tag.getIntValue(1, NULL));
+            material.scaParameters[std::string(name)] = tag.getIntValue(1, NULL);
     }
 }
 
@@ -502,7 +502,7 @@ void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatr
             const auto name = tag.getValue(0, std::string_view());
 
             if (!name.empty())
-                holder.model.scaParameters.emplace(name, tag.getIntValue(1, NULL));
+                holder.model.scaParameters[std::string(name)] = tag.getIntValue(1, NULL);
         }
     }
 
