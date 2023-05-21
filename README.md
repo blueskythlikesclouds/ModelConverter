@@ -59,7 +59,7 @@ mouthL@NAME(Sonic_Mouth_L)@PRP(ShadowRe, true)@PRP(ShadowCa, true)
 These function the same way as [Hedgehog Converter](https://github.com/DarioSamo/libgens-sonicglvl).
 
 * `SHDR`: Sets the shader for the material.
-	* Example: `@SDHR(Common_d)`
+	* Example: `@SHDR(Common_d)`
 * `LYR`
 	* Sets the rendering layer for the material, which affects how the mesh is displayed. The possible values are:
 		* `solid`: The surface is opaque and ignores the alpha channel in the texture. This is the default value.
