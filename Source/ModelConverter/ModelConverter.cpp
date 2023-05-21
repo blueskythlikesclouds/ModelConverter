@@ -30,6 +30,8 @@ bool ModelConverter::convert(const char* path, Config config, ModelHolder& holde
     if (converter.aiScene)
     {
         converter.convertMaterials();
+
+        converter.convertMaterials(config);
         converter.convertNodes();
         converter.convertMeshes();
 
@@ -250,7 +252,7 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
     return mesh;
 }
 
-void ModelConverter::convertMaterial(const aiMaterial* aiMaterial)
+void ModelConverter::convertMaterial(const aiMaterial* aiMaterial, Config config)
 {
     const aiString str = aiMaterial->GetName();
     const Tags tags(str.C_Str());
@@ -258,7 +260,7 @@ void ModelConverter::convertMaterial(const aiMaterial* aiMaterial)
     auto& material = holder.materials.emplace_back();
 
     material.name = tags.name;
-    material.shader = tags.getValue("SHDR", 0, "Common_d");
+    material.shader = tags.getValue("SHDR", 0, (config & CONFIG_FLAG_V1_MATERIAL) ? "Common_d[b]" : "Common_d");
     material.layer = tags.getValue("LYR", 0, "solid");
     material.alphaThreshold = 128;
     material.doubleSided = !tags.getBoolValue("CULL", 0, true);
@@ -402,10 +404,10 @@ void ModelConverter::convertMaterial(const aiMaterial* aiMaterial)
     }
 }
 
-void ModelConverter::convertMaterials()
+void ModelConverter::convertMaterials(Config config)
 {
     for (size_t i = 0; i < aiScene->mNumMaterials; i++)
-        convertMaterial(aiScene->mMaterials[i]);
+        convertMaterial(aiScene->mMaterials[i], config);
 }
 
 void ModelConverter::convertNodesRecursively(const aiNode* aiNode, size_t parentIndex, const aiMatrix4x4& parentMatrix)

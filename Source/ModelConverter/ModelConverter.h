@@ -22,8 +22,8 @@ struct ModelConverter
 
     Mesh convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix);
 
-    void convertMaterial(const aiMaterial* aiMaterial);
-    void convertMaterials();
+    void convertMaterial(const aiMaterial* aiMaterial, Config config);
+    void convertMaterials(Config config);
 
     void convertNodesRecursively(const aiNode* aiNode, size_t parentIndex, const aiMatrix4x4& parentMatrix);
     void convertNodes();
