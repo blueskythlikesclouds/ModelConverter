@@ -34,12 +34,19 @@ void Mesh::write(SampleChunkWriter& writer, uint32_t dataVersion) const
     {
         const size_t offset = writer.currentOffset;
 
-        for (size_t i = 0; i < vertexStreams[0][0].size(); i++)
+        for (const auto& vertexElement : vertexElements)
         {
-            for (const auto& vertexElement : vertexElements)
+            auto& vertexBuffers = vertexStreams[static_cast<size_t>(vertexElement.type)];
+
+            if (vertexBuffers.size() > vertexElement.index)
             {
-                writer.currentOffset = offset + (i * vertexSize) + vertexElement.offset;
-                vertexElement.write(writer, vertexStreams[static_cast<size_t>(vertexElement.type)][vertexElement.index][i]);
+                auto& vertexBuffer = vertexBuffers[vertexElement.index];
+
+                for (size_t i = 0; i < vertexBuffer.size(); i++)
+                {
+                    writer.currentOffset = offset + (i * vertexSize) + vertexElement.offset;
+                    vertexElement.write(writer, vertexBuffer[i]);
+                }
             }
         }
 

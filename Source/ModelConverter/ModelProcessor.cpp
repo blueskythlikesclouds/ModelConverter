@@ -264,12 +264,14 @@ static void getTexCoord(const SMikkTSpaceContext* pContext, float fvTexcOut[], c
         static_cast<MikkTSpaceContext*>(pContext->m_pUserData)->get(VertexType::TexCoord, iFace * 3 + iVert);
 
     fvTexcOut[0] = texCoord.fx;
-    fvTexcOut[1] = 1.0f - texCoord.fy;
+    fvTexcOut[1] = texCoord.fy;
 }
 
-static void setTSpace(const SMikkTSpaceContext* pContext, const float fvTangent[], const float fvBiTangent[], const float fMagS, const float fMagT,
-    const tbool bIsOrientationPreserving, const int iFace, const int iVert)
+static void setTSpaceBasic(const SMikkTSpaceContext* pContext, const float fvTangent[], const float fSign, const int iFace, const int iVert)
 {
+    Vector4& normal = 
+        static_cast<MikkTSpaceContext*>(pContext->m_pUserData)->get(VertexType::Normal, iFace * 3 + iVert);
+
     Vector4& tangent =
         static_cast<MikkTSpaceContext*>(pContext->m_pUserData)->get(VertexType::Tangent, iFace * 3 + iVert);
 
@@ -281,13 +283,22 @@ static void setTSpace(const SMikkTSpaceContext* pContext, const float fvTangent[
     tangent.fz = fvTangent[2];
     tangent.fw = 0.0f;
 
-    binormal.fx = fvBiTangent[0];
-    binormal.fy = fvBiTangent[1];
-    binormal.fz = fvBiTangent[2];
+    binormal.fx = (normal.fy * tangent.fz - normal.fz * tangent.fy) * fSign;
+    binormal.fy = (normal.fz * tangent.fx - normal.fx * tangent.fz) * fSign;
+    binormal.fz = (normal.fx * tangent.fy - normal.fy * tangent.fx) * fSign;
     binormal.fw = 0.0f;
+
+    const float magnitude = (binormal.fx * binormal.fx) + (binormal.fy * binormal.fy) + (binormal.fz * binormal.fz);
+    if (magnitude > 0.0f)
+    {
+        const float invSqrt = 1.0f / sqrtf(magnitude);
+        binormal.fx *= invSqrt;
+        binormal.fy *= invSqrt;
+        binormal.fz *= invSqrt;
+    }
 }
 
-static SMikkTSpaceInterface interface = { getNumFaces, getNumVerticesOfFace, getPosition, getNormal, getTexCoord, nullptr, setTSpace };
+static SMikkTSpaceInterface interface = { getNumFaces, getNumVerticesOfFace, getPosition, getNormal, getTexCoord, setTSpaceBasic, nullptr };
 
 static void generateTangents(Model& model)
 {

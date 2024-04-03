@@ -28,7 +28,7 @@ int main(int argc, const char* argv[])
         else if (equalsAny(argv[i], { "--generations", "--gens", "--bb" }))
             config = CONFIG_GENERATIONS;
 
-        else if (equalsAny(argv[i], { "--lost_world", "--lostworld", "--lw", "--sonic2013" }))
+        else if (equalsAny(argv[i], { "--lost-world", "--lostworld", "--lw", "--sonic2013" }))
             config = CONFIG_LOST_WORLD;
 
         else if (equalsAny(argv[i], { "--forces", "--wars" }))
