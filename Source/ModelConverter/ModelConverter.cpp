@@ -362,6 +362,9 @@ void ModelConverter::convertMaterial(const aiMaterial* aiMaterial, Config config
     material.float4Parameters.push_back(Parameter<Float4>("power_gloss_level", { { 50.0f, 0.1f, 0.01f, 0.0f } }));
     material.float4Parameters.push_back(Parameter<Float4>("opacity_reflection_refraction_spectype", { { 1.0f, 0.0f, 1.0f, 0.0f } }));
 
+    if (config & CONFIG_FLAG_D3D11_VERTEX_FORMAT)
+        material.float4Parameters.push_back(Parameter<Float4>("PBRFactor", { { 0.0f, 0.0f, 0.0f, 0.0f } }));
+
     std::unordered_map<std::string_view, size_t> indices;
 
     for (auto& parameter : material.float4Parameters)
