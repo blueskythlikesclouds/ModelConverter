@@ -20,7 +20,7 @@ struct ModelConverter
 
     static bool convert(const char* path, Config config, ModelHolder& holder);
 
-    Mesh convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix);
+    Mesh convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix, Config config);
 
     void convertMaterial(const aiMaterial* aiMaterial, Config config);
     void convertMaterials(Config config);
@@ -28,6 +28,6 @@ struct ModelConverter
     void convertNodesRecursively(const aiNode* aiNode, size_t parentIndex, const aiMatrix4x4& parentMatrix);
     void convertNodes();
 
-    void convertMeshesRecursively(const aiNode* aiNode, const aiMatrix4x4& parentMatrix);
-    void convertMeshes();
+    void convertMeshesRecursively(const aiNode* aiNode, const aiMatrix4x4& parentMatrix, Config config);
+    void convertMeshes(Config config);
 };

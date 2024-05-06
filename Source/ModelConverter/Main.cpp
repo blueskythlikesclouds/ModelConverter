@@ -37,6 +37,9 @@ int main(int argc, const char* argv[])
         else if (equalsAny(argv[i], { "--frontiers", "--rangers" }))
             config = CONFIG_FRONTIERS;
 
+        else if (equalsAny(argv[i], { "--generations-raytracing", "--gens-rt" }))
+            config = CONFIG_RAYTRACING;
+
         else if (equalsAny(argv[i], { "--override-materials", "-y" }))
             overwriteMaterials = true;
 
@@ -67,6 +70,7 @@ Options:
   --lw                          Convert model for Sonic Lost World
   --forces                      Convert model for Sonic Forces
   --frontiers                   Convert model for Sonic Frontiers
+  --gens-rt                     Convert model for Sonic Generations ray tracing mod
   
   --override-materials or -y    Override existing materials in the output directory
   --no-pause or -np             Don't pause the console when an error occurs

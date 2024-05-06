@@ -42,6 +42,7 @@ size_t VertexElement::getSize() const
     case VertexFormat::SHORT4N: return 8;
     case VertexFormat::USHORT2N: return 4;
     case VertexFormat::USHORT4N: return 8;
+    case VertexFormat::UDEC3N: return 4;
     case VertexFormat::DEC3N: return 4;
     case VertexFormat::FLOAT16_2: return 4;
     case VertexFormat::FLOAT16_4: return 8;
@@ -170,6 +171,13 @@ void VertexElement::write(SampleChunkWriter& writer, const Vector4& value) const
         writer.write(static_cast<uint16_t>(value.f[1] * 65535.0f));
         writer.write(static_cast<uint16_t>(value.f[2] * 65535.0f));
         writer.write(static_cast<uint16_t>(value.f[3] * 65535.0f));
+        break;
+
+    case VertexFormat::UDEC3N:
+        writer.write(static_cast<uint32_t>(
+            (meshopt_quantizeUnorm(value.f[0], 10) & 0x3FF) |
+            ((meshopt_quantizeUnorm(value.f[1], 10) & 0x3FF) << 10) |
+            ((meshopt_quantizeUnorm(value.f[2], 10) & 0x3FF) << 20)));
         break;
 
     case VertexFormat::DEC3N:

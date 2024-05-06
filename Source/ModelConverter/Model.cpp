@@ -87,10 +87,15 @@ bool Model::save(const char* path, Config config) const
             }
         }
 
+        if (config & CONFIG_FLAG_RAYTRACING_VERTEX_FORMAT)
+            model.children.emplace_back("GensRT  ", true);
+
         if (config & CONFIG_FLAG_TRIANGLE_LIST)
         {
             model.children.emplace_back("Topology", 3);
-            model.children.emplace_back("UserAABB", false);
+
+            if (config & CONFIG_FLAG_D3D11_VERTEX_FORMAT)
+                model.children.emplace_back("UserAABB", false);
         }
 
         model.children.emplace_back("Contexts", dataVersion, [&, dataVersion](SampleChunkWriter& writer)

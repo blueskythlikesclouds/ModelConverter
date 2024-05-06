@@ -37,7 +37,7 @@ bool ModelConverter::convert(const char* path, Config config, ModelHolder& holde
 
         converter.convertMaterials(config);
         converter.convertNodes();
-        converter.convertMeshes();
+        converter.convertMeshes(config);
 
         ModelProcessor::process(holder.model, config);
 
@@ -47,7 +47,7 @@ bool ModelConverter::convert(const char* path, Config config, ModelHolder& holde
     return false;
 }
 
-Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix)
+Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix, Config config)
 {
     aiQuaternion ori;
     aiVector3D pos;
@@ -84,8 +84,6 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
         }
     }
 
-    mesh.vertexElements.emplace_back(0, VertexFormat::FLOAT3, VertexType::Position, 0);
-
     if (aiMesh->HasNormals())
     {
         auto& normals = mesh.vertexStreams[static_cast<size_t>(VertexType::Normal)].emplace_back();
@@ -97,17 +95,11 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
             normals.emplace_back(normal[0], normal[1], normal[2]);
         }
 
-        mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), VertexFormat::FLOAT3, VertexType::Normal, 0);
-
         auto& tangents = mesh.vertexStreams[static_cast<size_t>(VertexType::Tangent)].emplace_back();
         tangents.resize(mesh.faceIndices.size());
 
-        mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), VertexFormat::FLOAT3, VertexType::Tangent, 0);
-
         auto& binormals = mesh.vertexStreams[static_cast<size_t>(VertexType::Binormal)].emplace_back();
         binormals.resize(mesh.faceIndices.size());
-
-        mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), VertexFormat::FLOAT3, VertexType::Binormal, 0);
     }
 
     for (uint32_t i = 0; i < AI_MAX_NUMBER_OF_TEXTURECOORDS; i++)
@@ -124,8 +116,6 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
             const aiVector3D& texCoord = aiMesh->mTextureCoords[i][index];
             texCoords.emplace_back(texCoord[0], texCoord[1]);
         }
-
-        mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), VertexFormat::FLOAT2, VertexType::TexCoord, i);
     }
 
     for (uint32_t i = 0; i < AI_MAX_NUMBER_OF_COLOR_SETS; i++)
@@ -150,16 +140,23 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
         {
             colors.resize(mesh.faceIndices.size(), Vector4(1.0f, 1.0f, 1.0f, 1.0f));
         }
-
-        mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), VertexFormat::UBYTE4N, VertexType::Color, i);
     }
 
     if (aiMesh->HasBones())
     {
-        std::vector<Vector4> blendIndices, blendWeights;
+        const uint32_t weightsPerVertex = config & CONFIG_FLAG_8_NODES_PER_VERTEX ? 8u : 4u;
 
-        blendIndices.resize(aiMesh->mNumVertices, Vector4(-1, -1, -1, -1));
-        blendWeights.resize(aiMesh->mNumVertices, Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+        std::vector<std::vector<Vector4>> blendIndices(weightsPerVertex / 4);
+        std::vector<std::vector<Vector4>> blendWeights(weightsPerVertex / 4);
+
+        for (auto& blendIndex : blendIndices)
+            blendIndex.resize(aiMesh->mNumVertices, Vector4(-1, -1, -1, -1));
+
+        for (auto& blendWeight : blendWeights)
+            blendWeight.resize(aiMesh->mNumVertices, Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+
+        #define BLEND_INDEX(WEIGHT_ID, VERTEX_ID) blendIndices[(WEIGHT_ID) / 4][VERTEX_ID].i[(WEIGHT_ID) % 4]
+        #define BLEND_WEIGHT(WEIGHT_ID, VERTEX_ID) blendWeights[(WEIGHT_ID) / 4][VERTEX_ID].f[(WEIGHT_ID) % 4]
 
         for (size_t boneIndex = 0; boneIndex < aiMesh->mNumBones; boneIndex++)
         {
@@ -176,21 +173,18 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
             {
                 const aiVertexWeight& aiWeight = aiBone->mWeights[weightIndex];
 
-                auto& blendIndex = blendIndices[aiWeight.mVertexId];
-                auto& blendWeight = blendWeights[aiWeight.mVertexId];
-
-                for (int32_t i = 0; i < 4; i++)
+                for (int32_t i = 0; i < static_cast<int32_t>(weightsPerVertex); i++)
                 {
-                    if (aiWeight.mWeight > blendWeight.f[i])
+                    if (aiWeight.mWeight > BLEND_WEIGHT(i, aiWeight.mVertexId))
                     {
-                        for (int32_t j = 3; j > i; j--)
+                        for (int32_t j = static_cast<int32_t>(weightsPerVertex) - 1; j > i; j--)
                         {
-                            blendIndex.u[j] = blendIndex.u[j - 1];
-                            blendWeight.f[j] = blendWeight.f[j - 1];
+                            BLEND_INDEX(j, aiWeight.mVertexId) = BLEND_INDEX(j - 1, aiWeight.mVertexId);
+                            BLEND_WEIGHT(j, aiWeight.mVertexId) = BLEND_WEIGHT(j - 1, aiWeight.mVertexId);
                         }
 
-                        blendIndex.u[i] = static_cast<uint32_t>(meshNodeIndex);
-                        blendWeight.f[i] = aiWeight.mWeight;
+                        BLEND_INDEX(i, aiWeight.mVertexId) = static_cast<uint32_t>(meshNodeIndex);
+                        BLEND_WEIGHT(i, aiWeight.mVertexId) = aiWeight.mWeight;
 
                         break;
                     }
@@ -198,51 +192,60 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
             }
         }
 
+        uint32_t maxWeightsPerVertex = 0;
+
         for (size_t i = 0; i < aiMesh->mNumVertices; i++)
         {
-            auto& blendIndex = blendIndices[i];
-            auto& blendWeight = blendWeights[i];
+            uint32_t numWeights = 0;
+            float totalWeight = 0.0f;
 
-            float totalWeight = blendWeight.fx + blendWeight.fy + blendWeight.fz + blendWeight.fw;
+            for (size_t j = 0; j < weightsPerVertex; j++)
+            {
+                if (BLEND_INDEX(j, i) >= 0)
+                    ++numWeights;
+
+                totalWeight += BLEND_WEIGHT(j, i);
+            }
+
+            maxWeightsPerVertex = std::max(maxWeightsPerVertex, numWeights);
 
             if (totalWeight > 0.0f)
             {
                 totalWeight = 1.0f / totalWeight;
 
-                blendWeight.fx *= totalWeight;
-                blendWeight.fy *= totalWeight;
-                blendWeight.fz *= totalWeight;
-                blendWeight.fw *= totalWeight;
+                for (size_t j = 0; j < numWeights; j++)
+                    BLEND_WEIGHT(j, i) *= totalWeight;
             }
             else
             {
-                blendIndex.i[0] = 0;
-                blendIndex.i[1] = -1;
-                blendIndex.i[2] = -1;
-                blendIndex.i[3] = -1;
+                for (size_t j = 0; j < weightsPerVertex; j++)
+                    BLEND_INDEX(j, i) = (j == 0) ? 0 : -1;
             }
 
-            blendIndex.reverse();
-            blendWeight.reverse();
+            for (auto& blendIndex : blendIndices)
+                blendIndex[i].reverse();
+
+            for (auto& blendWeight : blendWeights)
+                blendWeight[i].reverse();
         }
 
-        auto& isolatedBlendIndices = mesh.vertexStreams[static_cast<size_t>(VertexType::BlendIndices)].emplace_back();
-        isolatedBlendIndices.reserve(mesh.faceIndices.size());
+        #undef BLEND_WEIGHT
+        #undef BLEND_INDEX
 
-        auto& isolatedBlendWeights = mesh.vertexStreams[static_cast<size_t>(VertexType::BlendWeight)].emplace_back();
-        isolatedBlendWeights.reserve(mesh.faceIndices.size());
-
-        for (const auto index : mesh.faceIndices)
+        for (uint32_t i = 0; i < (maxWeightsPerVertex + 3) / 4; i++)
         {
-            isolatedBlendIndices.push_back(blendIndices[index]);
-            isolatedBlendWeights.push_back(blendWeights[index]);
+            auto& isolatedBlendIndices = mesh.vertexStreams[static_cast<size_t>(VertexType::BlendIndices)].emplace_back();
+            isolatedBlendIndices.reserve(mesh.faceIndices.size());
+
+            auto& isolatedBlendWeights = mesh.vertexStreams[static_cast<size_t>(VertexType::BlendWeight)].emplace_back();
+            isolatedBlendWeights.reserve(mesh.faceIndices.size());
+
+            for (const auto index : mesh.faceIndices)
+            {
+                isolatedBlendIndices.push_back(blendIndices[i][index]);
+                isolatedBlendWeights.push_back(blendWeights[i][index]);
+            }
         }
-
-        mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), 
-            holder.model.nodes.size() > 255 ? VertexFormat::USHORT4 : VertexFormat::UBYTE4, VertexType::BlendIndices, 0);
-
-        mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), 
-            VertexFormat::UBYTE4N, VertexType::BlendWeight, 0);
     }
 
     for (size_t i = 0; i < mesh.faceIndices.size(); i++)
@@ -445,7 +448,7 @@ void ModelConverter::convertNodes()
         nodeIndices.emplace(node.name, nodeIndices.size());
 }
 
-void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatrix4x4& parentMatrix)
+void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatrix4x4& parentMatrix, Config config)
 {
     const aiMatrix4x4 matrix = parentMatrix * aiNode->mTransformation;
 
@@ -478,7 +481,7 @@ void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatr
             if ((aiMesh->mPrimitiveTypes & aiPrimitiveType_TRIANGLE) == 0)
                 continue;
 
-            Mesh mesh = convertMesh(aiMesh, matrix);
+            Mesh mesh = convertMesh(aiMesh, matrix, config);
 
             if (!mesh.faceIndices.empty() && !mesh.vertexStreams[0].empty() && !mesh.vertexStreams[0][0].empty())
             {
@@ -510,10 +513,10 @@ void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatr
     }
 
     for (size_t i = 0; i < aiNode->mNumChildren; i++)
-        convertMeshesRecursively(aiNode->mChildren[i], matrix);
+        convertMeshesRecursively(aiNode->mChildren[i], matrix, config);
 }
 
-void ModelConverter::convertMeshes()
+void ModelConverter::convertMeshes(Config config)
 {
-    convertMeshesRecursively(aiScene->mRootNode, aiMatrix4x4());
+    convertMeshesRecursively(aiScene->mRootNode, aiMatrix4x4(), config);
 }

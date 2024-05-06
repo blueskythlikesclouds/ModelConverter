@@ -148,34 +148,6 @@ static void optimizeModel(Model& model, Config config)
             std::swap(mesh.faceIndices, indices);
         }
 
-        if (config & (CONFIG_FLAG_XBOX_VERTEX_FORMAT | CONFIG_FLAG_D3D11_VERTEX_FORMAT))
-        {
-            for (auto& vertexElement : mesh.vertexElements)
-            {
-                switch (vertexElement.type)
-                {
-                case VertexType::Normal:
-                case VertexType::Tangent:
-                case VertexType::Binormal:
-                    vertexElement.format = (config & CONFIG_FLAG_D3D11_VERTEX_FORMAT) ? VertexFormat::DEC3N : VertexFormat::HEND3N;
-                    break;
-
-                case VertexType::TexCoord:
-                    vertexElement.format = VertexFormat::FLOAT16_2;
-                    break;
-
-                case VertexType::Color:
-                    vertexElement.format = VertexFormat::UBYTE4N;
-                    break;
-                }
-            }
-
-            mesh.vertexElements[0].offset = 0;
-
-            for (size_t i = 1; i < mesh.vertexElements.size(); i++)
-                mesh.vertexElements[i].offset = static_cast<uint16_t>(mesh.vertexElements[i - 1].getNextOffset());
-        }
-
         std::unordered_map<uint32_t, uint16_t> nodeRemap;
 
         for (auto& vertexStream : mesh.vertexStreams[static_cast<size_t>(VertexType::BlendIndices)])
@@ -208,6 +180,127 @@ static void optimizeModel(Model& model, Config config)
             nodeIndices[newIndex] = mesh.nodeIndices[meshNodeIndex];
 
         std::swap(mesh.nodeIndices, nodeIndices);
+
+        if (mesh.nodeIndices.size() <= 1 && (config & CONFIG_FLAG_1_NODE_OPTIMIZATION))
+        {
+            mesh.vertexStreams[static_cast<size_t>(VertexType::BlendIndices)].clear();
+            mesh.vertexStreams[static_cast<size_t>(VertexType::BlendWeight)].clear();
+        }
+    });
+}
+
+static void generateVertexFormats(Model& model, Config config)
+{
+    traverseModel(model, [config](Mesh& mesh, auto&)
+    {
+        mesh.vertexElements.emplace_back(0, VertexFormat::FLOAT3, VertexType::Position, 0);
+    
+        if (config & CONFIG_FLAG_RAYTRACING_VERTEX_FORMAT)
+        {
+            constexpr std::pair<VertexType, VertexFormat> VERTEX_ELEMENTS[] =
+            {
+                { VertexType::Color, VertexFormat::UBYTE4N },
+                { VertexType::Normal, VertexFormat::UDEC3N },
+                { VertexType::Tangent, VertexFormat::UDEC3N },
+                { VertexType::Binormal, VertexFormat::UDEC3N },
+                { VertexType::TexCoord, VertexFormat::FLOAT16_2 },
+                { VertexType::BlendIndices, VertexFormat::UBYTE4 },
+                { VertexType::BlendWeight, VertexFormat::UBYTE4N }
+            };
+    
+            for (size_t i = 0; ; i++)
+            {
+                bool shouldContinue = false;
+    
+                for (const auto& [vertexType, vertexFormat] : VERTEX_ELEMENTS)
+                {
+                    auto& vertexStreams = mesh.vertexStreams[static_cast<uint32_t>(vertexType)];
+    
+                    if (i < vertexStreams.size())
+                    {
+                        if (!vertexStreams[i].empty())
+                            mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), vertexFormat, vertexType, i);
+    
+                        shouldContinue = true;
+                    }
+                }
+    
+                if (!shouldContinue)
+                    break;
+            }
+        }
+        else
+        {
+            VertexFormat normalFormat;
+    
+            if (config & CONFIG_FLAG_D3D11_VERTEX_FORMAT)
+                normalFormat = VertexFormat::DEC3N;
+            else if (config & CONFIG_FLAG_XBOX_VERTEX_FORMAT)
+                normalFormat = VertexFormat::HEND3N;
+            else
+                normalFormat = VertexFormat::FLOAT3;
+    
+            VertexFormat texCoordFormat;
+    
+            if (config & (CONFIG_FLAG_D3D11_VERTEX_FORMAT | CONFIG_FLAG_XBOX_VERTEX_FORMAT))
+                texCoordFormat = VertexFormat::FLOAT16_2;
+            else
+                texCoordFormat = VertexFormat::FLOAT2;
+    
+            const std::pair<VertexType, VertexFormat> vertexElements[] =
+            {
+                { VertexType::Normal, normalFormat },
+                { VertexType::Tangent, normalFormat },
+                { VertexType::Binormal, normalFormat },
+                { VertexType::TexCoord, texCoordFormat },
+                { VertexType::Color, VertexFormat::UBYTE4N },
+                { VertexType::BlendIndices, VertexFormat::UBYTE4 },
+                { VertexType::BlendWeight, VertexFormat::UBYTE4N }
+            };
+    
+            for (const auto& [vertexType, vertexFormat] : vertexElements)
+            {
+                auto& vertexStreams = mesh.vertexStreams[static_cast<uint32_t>(vertexType)];
+    
+                for (size_t i = 0; i < vertexStreams.size(); i++)
+                {
+                    if (!vertexStreams[i].empty())
+                        mesh.vertexElements.emplace_back(mesh.vertexElements.back().getNextOffset(), vertexFormat, vertexType, i);
+                }
+            }
+        }
+    });
+}
+
+static void modifyVerticesForRaytracing(Model& model)
+{
+    traverseModel(model, [](Mesh& mesh, auto&)
+    {
+        constexpr VertexType VERTEX_TYPES[] =
+        {
+            VertexType::Normal,
+            VertexType::Tangent,
+            VertexType::Binormal
+        };
+
+        for (const auto vertexType : VERTEX_TYPES)
+        {
+            for (auto& vertexStream : mesh.vertexStreams[static_cast<uint32_t>(vertexType)])
+            {
+                for (auto& normal : vertexStream)
+                {
+                    normal.fx = normal.fx * 0.5f + 0.5f;
+                    normal.fy = normal.fy * 0.5f + 0.5f;
+                    normal.fz = normal.fz * 0.5f + 0.5f;
+                }
+            }
+        }
+
+        for (auto& vertexStream : mesh.vertexStreams[static_cast<uint32_t>(VertexType::TexCoord)])
+        {
+            for (auto& texCoord : vertexStream)
+                std::swap(texCoord.fx, texCoord.fy);
+        }
     });
 }
 
@@ -325,4 +418,8 @@ void ModelProcessor::process(Model& model, Config config)
     unifyModel(model);
     splitModel(model, config);
     optimizeModel(model, config);
+    generateVertexFormats(model, config);
+
+    if (config & CONFIG_FLAG_RAYTRACING_VERTEX_FORMAT)
+        modifyVerticesForRaytracing(model);
 }
