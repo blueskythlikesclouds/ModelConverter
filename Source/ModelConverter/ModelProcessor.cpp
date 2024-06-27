@@ -4,6 +4,7 @@
 #include "Mesh.h"
 #include "MeshGroup.h"
 #include "Model.h"
+#include "Node.h"
 #include "TextureUnit.h"
 #include "VertexElement.h"
 
@@ -191,7 +192,7 @@ static void optimizeModel(Model& model, Config config)
 
 static void generateVertexFormats(Model& model, Config config)
 {
-    traverseModel(model, [config](Mesh& mesh, auto&)
+    traverseModel(model, [&, config](Mesh& mesh, auto&)
     {
         mesh.vertexElements.emplace_back(0, VertexFormat::FLOAT3, VertexType::Position, 0);
     
@@ -246,6 +247,13 @@ static void generateVertexFormats(Model& model, Config config)
                 texCoordFormat = VertexFormat::FLOAT16_2;
             else
                 texCoordFormat = VertexFormat::FLOAT2;
+
+            VertexFormat blendIndicesFormat;
+
+            if (model.nodes.size() > 255)
+                blendIndicesFormat = VertexFormat::USHORT4;
+            else
+                blendIndicesFormat = VertexFormat::UBYTE4;
     
             const std::pair<VertexType, VertexFormat> vertexElements[] =
             {
@@ -254,7 +262,7 @@ static void generateVertexFormats(Model& model, Config config)
                 { VertexType::Binormal, normalFormat },
                 { VertexType::TexCoord, texCoordFormat },
                 { VertexType::Color, VertexFormat::UBYTE4N },
-                { VertexType::BlendIndices, VertexFormat::UBYTE4 },
+                { VertexType::BlendIndices, blendIndicesFormat },
                 { VertexType::BlendWeight, VertexFormat::UBYTE4N }
             };
     

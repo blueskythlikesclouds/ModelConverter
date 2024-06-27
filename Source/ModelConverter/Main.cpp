@@ -25,6 +25,9 @@ int main(int argc, const char* argv[])
         if (equalsAny(argv[i], { "--unleashed", "--swa" }))
             config = CONFIG_UNLEASHED;
 
+        else if (equalsAny(argv[i], { "--unleashed-fur", "--swa-fur" }))
+            config = CONFIG_UNLEASHED_FUR;
+
         else if (equalsAny(argv[i], { "--generations", "--gens", "--bb" }))
             config = CONFIG_GENERATIONS;
 
@@ -66,6 +69,7 @@ Description:
 
 Options:
   --unleashed                   Convert model for Sonic Unleashed
+  --unleashed-fur               Convert model for Sonic Unleashed fur renderer
   --gens                        Convert model for Sonic Generations
   --lw                          Convert model for Sonic Lost World
   --forces                      Convert model for Sonic Forces
