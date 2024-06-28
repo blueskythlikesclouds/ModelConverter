@@ -96,10 +96,10 @@ void VertexElement::write(SampleChunkWriter& writer, const Vector4& value) const
         break;
 
     case VertexFormat::D3DCOLOR:
-        writer.write(static_cast<uint8_t>(value.f[2] * 255.0f));
-        writer.write(static_cast<uint8_t>(value.f[1] * 255.0f));
-        writer.write(static_cast<uint8_t>(value.f[0] * 255.0f));
-        writer.write(static_cast<uint8_t>(value.f[3] * 255.0f));
+        writer.write(static_cast<uint8_t>(meshopt_quantizeUnorm(value.f[2], 8)));
+        writer.write(static_cast<uint8_t>(meshopt_quantizeUnorm(value.f[1], 8)));
+        writer.write(static_cast<uint8_t>(meshopt_quantizeUnorm(value.f[0], 8)));
+        writer.write(static_cast<uint8_t>(meshopt_quantizeUnorm(value.f[3], 8)));
         break;
 
     case VertexFormat::UBYTE4:
@@ -136,10 +136,10 @@ void VertexElement::write(SampleChunkWriter& writer, const Vector4& value) const
         break;
 
     case VertexFormat::UBYTE4N:
-        writer.write(static_cast<uint8_t>(value.f[3] * 255.0f));
-        writer.write(static_cast<uint8_t>(value.f[2] * 255.0f));
-        writer.write(static_cast<uint8_t>(value.f[1] * 255.0f));
-        writer.write(static_cast<uint8_t>(value.f[0] * 255.0f));
+        writer.write(static_cast<uint8_t>(meshopt_quantizeUnorm(value.f[3], 8)));
+        writer.write(static_cast<uint8_t>(meshopt_quantizeUnorm(value.f[2], 8)));
+        writer.write(static_cast<uint8_t>(meshopt_quantizeUnorm(value.f[1], 8)));
+        writer.write(static_cast<uint8_t>(meshopt_quantizeUnorm(value.f[0], 8)));
         break;
 
     case VertexFormat::BYTE4N:
@@ -162,15 +162,15 @@ void VertexElement::write(SampleChunkWriter& writer, const Vector4& value) const
         break;
 
     case VertexFormat::USHORT2N:
-        writer.write(static_cast<uint16_t>(value.f[0] * 65535.0f));
-        writer.write(static_cast<uint16_t>(value.f[1] * 65535.0f));
+        writer.write(static_cast<uint16_t>(meshopt_quantizeUnorm(value.f[0], 16)));
+        writer.write(static_cast<uint16_t>(meshopt_quantizeUnorm(value.f[1], 16)));
         break;
 
     case VertexFormat::USHORT4N:
-        writer.write(static_cast<uint16_t>(value.f[0] * 65535.0f));
-        writer.write(static_cast<uint16_t>(value.f[1] * 65535.0f));
-        writer.write(static_cast<uint16_t>(value.f[2] * 65535.0f));
-        writer.write(static_cast<uint16_t>(value.f[3] * 65535.0f));
+        writer.write(static_cast<uint16_t>(meshopt_quantizeUnorm(value.f[0], 16)));
+        writer.write(static_cast<uint16_t>(meshopt_quantizeUnorm(value.f[1], 16)));
+        writer.write(static_cast<uint16_t>(meshopt_quantizeUnorm(value.f[2], 16)));
+        writer.write(static_cast<uint16_t>(meshopt_quantizeUnorm(value.f[3], 16)));
         break;
 
     case VertexFormat::UDEC3N:
