@@ -201,16 +201,16 @@ void VertexElement::write(SampleChunkWriter& writer, const Vector4& value) const
 
     case VertexFormat::UHEND3N:
         writer.write(static_cast<uint32_t>(
-            ((meshopt_quantizeUnorm(value.f[0], 9) & 0x1FF) << 2) |
-            ((meshopt_quantizeUnorm(value.f[1], 9) & 0x1FF) << 13) |
-            ((meshopt_quantizeUnorm(value.f[2], 9) & 0x1FF) << 23)));
+            (meshopt_quantizeUnorm(value.f[0], 11) & 0x7FF) |
+            ((meshopt_quantizeUnorm(value.f[1], 11) & 0x7FF) << 11) |
+            ((meshopt_quantizeUnorm(value.f[2], 10) & 0x3FF) << 22)));
         break;
 
     case VertexFormat::HEND3N:
         writer.write(static_cast<uint32_t>(
-            ((meshopt_quantizeSnorm(value.f[0], 9) & 0x1FF) << 2) |
-            ((meshopt_quantizeSnorm(value.f[1], 9) & 0x1FF) << 13) |
-            ((meshopt_quantizeSnorm(value.f[2], 9) & 0x1FF) << 23)));
+            (meshopt_quantizeSnorm(value.f[0], 11) & 0x7FF) |
+            ((meshopt_quantizeSnorm(value.f[1], 11) & 0x7FF) << 11) |
+            ((meshopt_quantizeSnorm(value.f[2], 10) & 0x3FF) << 22)));
         break;
     }
 }
