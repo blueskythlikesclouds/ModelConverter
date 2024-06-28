@@ -84,9 +84,10 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
         }
     }
 
+    auto& normals = mesh.vertexStreams[static_cast<size_t>(VertexType::Normal)].emplace_back();
+
     if (aiMesh->HasNormals())
     {
-        auto& normals = mesh.vertexStreams[static_cast<size_t>(VertexType::Normal)].emplace_back();
         normals.reserve(mesh.faceIndices.size());
 
         for (const auto index : mesh.faceIndices)
@@ -94,27 +95,39 @@ Mesh ModelConverter::convertMesh(const aiMesh* aiMesh, const aiMatrix4x4& matrix
             const aiVector3D normal = ori.Rotate(aiMesh->mNormals[index]).NormalizeSafe();
             normals.emplace_back(normal[0], normal[1], normal[2]);
         }
-
-        auto& tangents = mesh.vertexStreams[static_cast<size_t>(VertexType::Tangent)].emplace_back();
-        tangents.resize(mesh.faceIndices.size());
-
-        auto& binormals = mesh.vertexStreams[static_cast<size_t>(VertexType::Binormal)].emplace_back();
-        binormals.resize(mesh.faceIndices.size());
     }
+    else
+    {
+        normals.resize(mesh.faceIndices.size());
+    }
+    
+    auto& tangents = mesh.vertexStreams[static_cast<size_t>(VertexType::Tangent)].emplace_back();
+    tangents.resize(mesh.faceIndices.size());
+    
+    auto& binormals = mesh.vertexStreams[static_cast<size_t>(VertexType::Binormal)].emplace_back();
+    binormals.resize(mesh.faceIndices.size());
 
     for (uint32_t i = 0; i < AI_MAX_NUMBER_OF_TEXTURECOORDS; i++)
     {
         auto& texCoords = mesh.vertexStreams[static_cast<size_t>(VertexType::TexCoord)].emplace_back();
 
-        if (!aiMesh->HasTextureCoords(i))
+        const bool hasTexCoords = aiMesh->HasTextureCoords(i);
+        if (!hasTexCoords && i != 0)
             continue;
 
-        texCoords.reserve(mesh.faceIndices.size());
-
-        for (const auto index : mesh.faceIndices)
+        if (hasTexCoords)
         {
-            const aiVector3D& texCoord = aiMesh->mTextureCoords[i][index];
-            texCoords.emplace_back(texCoord[0], texCoord[1]);
+            texCoords.reserve(mesh.faceIndices.size());
+
+            for (const auto index : mesh.faceIndices)
+            {
+                const aiVector3D& texCoord = aiMesh->mTextureCoords[i][index];
+                texCoords.emplace_back(texCoord[0], texCoord[1]);
+            }
+        }
+        else
+        {
+            texCoords.resize(mesh.faceIndices.size());
         }
     }
 
