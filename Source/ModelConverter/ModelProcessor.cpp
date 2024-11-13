@@ -180,6 +180,10 @@ static void optimizeModel(Model& model, Config config)
         for (const auto& [meshNodeIndex, newIndex] : nodeRemap)
             nodeIndices[newIndex] = mesh.nodeIndices[meshNodeIndex];
 
+        // Assign mesh to root bone if it's unrigged.
+        if (nodeIndices.empty())
+            nodeIndices.push_back(0);
+
         std::swap(mesh.nodeIndices, nodeIndices);
 
         if (mesh.nodeIndices.size() <= 1 && (config & CONFIG_FLAG_1_NODE_OPTIMIZATION))

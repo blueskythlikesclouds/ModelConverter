@@ -16,6 +16,8 @@ If the destination is not specified, the model file will be saved in the same fo
 
 * `--unleashed`
 	* Convert to Sonic Unleashed format.
+* `--unleashed-fur`
+	* Convert to Sonic Unleashed fur format. Required for Werehog's fur and other such models.
 * `--gens`
 	* Convert to Sonic Generations format.
 * `--lw`
@@ -23,7 +25,7 @@ If the destination is not specified, the model file will be saved in the same fo
 * `--forces`
 	* Convert to Sonic Forces format.
 * `--frontiers`
-	* Convert to Sonic Frontiers format.
+	* Convert to Sonic Frontiers or Shadow Generations format.
 * `--override-materials` or `-y`
 	* Replace any existing materials in the output directory with the new ones.
 * `--no-pause` or `-np`

@@ -459,6 +459,21 @@ void ModelConverter::convertNodes()
 
     for (const auto& node : holder.model.nodes)
         nodeIndices.emplace(node.name, nodeIndices.size());
+
+    // Generate an empty root bone if no skeleton was found.
+    if (holder.model.nodes.empty())
+    {
+        auto& node = holder.model.nodes.emplace_back();
+        node.parentIndex = ~0;
+        node.name = "Root";
+
+        // Generate identity matrix.
+        for (size_t i = 0; i < 4; i++)
+        {
+            for (size_t j = 0; j < 4; j++)
+                node.matrix[i * 4 + j] = (i == j) ? 1.0f : 0.0f;
+        }
+    }
 }
 
 void ModelConverter::convertMeshesRecursively(const aiNode* aiNode, const aiMatrix4x4& parentMatrix, Config config)

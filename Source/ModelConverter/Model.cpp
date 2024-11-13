@@ -157,7 +157,7 @@ bool Model::save(const char* path, Config config) const
         if (!scaParameters.empty())
         {
             auto& nodesExt = model.children.emplace_back("NodesExt", 1);
-            const size_t count = !nodes.empty() ? nodes.size() : 1;
+            const size_t count = !meshGroups.empty() ? meshGroups.size() : 1;
 
             for (size_t i = 0; i < count; i++)
             {
